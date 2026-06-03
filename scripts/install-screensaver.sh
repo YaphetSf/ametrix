@@ -7,8 +7,10 @@ PRODUCT="$DERIVED_DATA/Build/Products/Release/Ame.saver"
 DEST_DIR="${AME_SAVER_DEST_DIR:-$HOME/Library/Screen Savers}"
 DEST="$DEST_DIR/Ame.saver"
 
-if [[ -n "${DEVELOPER_DIR:-}" ]]; then
-  export DEVELOPER_DIR
+if [[ -z "${DEVELOPER_DIR:-}" && -d "/Applications/Xcode.app/Contents/Developer" ]]; then
+    export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+elif [[ -n "${DEVELOPER_DIR:-}" ]]; then
+    export DEVELOPER_DIR
 fi
 
 xcodebuild \

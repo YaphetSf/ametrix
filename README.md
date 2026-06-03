@@ -163,7 +163,7 @@ Useful environment variables:
 | `AME_CONFIG_DIR` | Override canonical config directory |
 | `AME_SAVER_DEST_DIR` | Override `.saver` install directory |
 | `AME_OPEN_SETTINGS=0` | Skip opening System Settings after saver install |
-| `DEVELOPER_DIR` | Select a specific Xcode toolchain |
+| `DEVELOPER_DIR` | Select a specific Xcode toolchain; otherwise `/Applications/Xcode.app` is used when present |
 
 ## Architecture
 
