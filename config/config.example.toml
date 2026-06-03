@@ -1,0 +1,26 @@
+# Ame configuration
+# Presets: classic, amber, cyan, white, violet
+
+frameRate = 60
+preset = "classic"
+density = 1.0
+
+fontName = "Menlo"
+fontSize = 16
+
+# Comment these out to use the selected preset colors directly.
+# backgroundColor = "#000000"
+# headColor = "#d9ffd9"
+# tailColor = "#00ff41"
+
+minimumTailAlpha = 0.08
+characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン@#$%&*+-=<>"
+
+[speed]
+min = 18
+max = 38
+
+[trail]
+min = 14
+max = 48
+rowMultiplier = 0.75

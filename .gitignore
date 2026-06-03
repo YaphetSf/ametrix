@@ -1,0 +1,13 @@
+.build/
+.swiftpm/
+.DS_Store
+*.swp
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+DerivedData/
+
+# Local helper scripts and runtime diagnostics
+ame.sh
+*.log
