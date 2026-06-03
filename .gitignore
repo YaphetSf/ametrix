@@ -9,5 +9,4 @@ xcuserdata/
 DerivedData/
 
 # Local helper scripts and runtime diagnostics
-ame.sh
 *.log

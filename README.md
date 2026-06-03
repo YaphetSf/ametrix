@@ -10,7 +10,6 @@ Ame can run as a real macOS `.saver` bundle, or as a direct full-screen overlay 
 - Manual full-screen overlay mode
 - Multi-display support
 - Configurable color presets, density, speed, trails, font, and glyph palette
-- TOML configuration with commented examples
 - Latin, katakana, number, and symbol glyphs by default
 - No network access or telemetry
 
@@ -61,6 +60,14 @@ ame --print-config
 Screen saver mode is controlled by macOS. Wake, unlock, password, Touch ID, and Apple Watch unlock behavior are handled by the system.
 
 Overlay mode opens one borderless window per display. Press `Esc` or `Cmd-Q` to quit.
+
+## Raycast
+
+A Raycast Script Command is included at:
+
+```bash
+scripts/raycast-ame.sh
+```
 
 ## Configuration
 
