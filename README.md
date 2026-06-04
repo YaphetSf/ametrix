@@ -69,6 +69,22 @@ A Raycast Script Command is included at:
 scripts/raycast-ame.sh
 ```
 
+## Karabiner
+
+Install a Karabiner-Elements complex modification that remaps `Ctrl-Cmd-Q`
+to start the selected macOS screen saver with Ame:
+
+```bash
+scripts/install-karabiner-lock.sh
+```
+
+Then enable **Ame -> Ctrl-Command-Q starts Ame screen saver** in
+Karabiner-Elements under **Complex Modifications -> Add predefined rule**.
+
+For lock behavior, configure macOS to require a password immediately after the
+screen saver begins. Ame starts the system screen saver; macOS still handles
+authentication, Touch ID, Apple Watch unlock, and password policy.
+
 ## Configuration
 
 Edit the canonical TOML config:
