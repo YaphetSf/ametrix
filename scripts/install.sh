@@ -24,7 +24,9 @@ if [[ "${AME_INSTALL_KARABINER:-1}" == "1" ]]; then
   AME_BIN_DEST="$BIN_DEST" "$ROOT_DIR/scripts/install-karabiner-lock.sh"
 fi
 
-if [[ "${AME_INSTALL_WALLPAPER:-0}" == "1" ]]; then
+if [[ "${AME_INSTALL_MENUBAR:-0}" == "1" ]]; then
+  AME_BIN_DEST="$BIN_DEST" "$ROOT_DIR/scripts/install-menubar-agent.sh"
+elif [[ "${AME_INSTALL_WALLPAPER:-0}" == "1" ]]; then
   AME_BIN_DEST="$BIN_DEST" "$ROOT_DIR/scripts/install-wallpaper-agent.sh"
 fi
 
@@ -38,7 +40,13 @@ if [[ "${AME_INSTALL_KARABINER:-1}" == "1" ]]; then
   echo "  3. In Karabiner-Elements, enable: Ame -> Ctrl-Command-Q starts Ame screen saver."
 fi
 if [[ "${AME_INSTALL_WALLPAPER:-0}" == "1" ]]; then
-  echo "  4. Ame wallpaper mode is installed as a login item LaunchAgent."
+  if [[ "${AME_INSTALL_MENUBAR:-0}" == "1" ]]; then
+    echo "  4. Ame menu bar controller is installed as a login item LaunchAgent."
+  else
+    echo "  4. Ame wallpaper mode is installed as a login item LaunchAgent."
+  fi
+elif [[ "${AME_INSTALL_MENUBAR:-0}" == "1" ]]; then
+  echo "  4. Ame menu bar controller is installed as a login item LaunchAgent."
 fi
 echo ""
 echo "Try it now: ame"

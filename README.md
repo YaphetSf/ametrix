@@ -20,6 +20,7 @@ Watch unlock, and screen-saver password policy.
 
 - Native macOS screen saver bundle
 - Optional `Ctrl-Cmd-Q` trigger through Karabiner-Elements
+- Optional menu bar controller for wallpaper and lock-screen actions
 - Optional live wallpaper mode
 - Manual full-screen overlay mode
 - Multi-display support
@@ -68,7 +69,14 @@ If you do not use Karabiner:
 curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_KARABINER=0 bash
 ```
 
-If you want Ame to also run as a live wallpaper at login:
+If you want a menu bar controller for toggling the live wallpaper and starting
+the lock screen:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_MENUBAR=1 bash
+```
+
+If you want Ame to run as a live wallpaper at login without the menu bar:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_WALLPAPER=1 bash
@@ -100,6 +108,18 @@ Run Ame as a desktop-level live wallpaper:
 ame --wallpaper
 ```
 
+Run Ame as a menu bar controller:
+
+```bash
+ame --menubar
+```
+
+Start menu bar mode with wallpaper already enabled:
+
+```bash
+ame --menubar --wallpaper
+```
+
 Inspect the resolved config:
 
 ```bash
@@ -114,6 +134,22 @@ Wallpaper mode runs behind normal desktop windows, joins all Spaces, and ignores
 mouse events. It is a normal app window, not a native item in macOS Wallpaper
 settings.
 
+Menu bar mode adds an Ame icon to the macOS menu bar. Use it to start or stop
+the live wallpaper, start the selected macOS screen saver for lock-screen use,
+or quit Ame. Wallpaper state is remembered across menu bar launches.
+
+Install menu bar mode as a login item:
+
+```bash
+scripts/install-menubar-agent.sh
+```
+
+Remove the menu bar login item:
+
+```bash
+scripts/install-menubar-agent.sh --uninstall
+```
+
 Install wallpaper mode as a login item:
 
 ```bash
@@ -126,7 +162,13 @@ Remove the login item:
 scripts/install-wallpaper-agent.sh --uninstall
 ```
 
-Install everything and enable wallpaper mode immediately:
+Install everything and enable menu bar mode immediately:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_MENUBAR=1 bash
+```
+
+Install everything and enable wallpaper mode immediately without the menu bar:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_WALLPAPER=1 bash
@@ -268,6 +310,7 @@ Useful environment variables:
 | `AME_INSTALL_DIR` | Override where `scripts/bootstrap.sh` clones the repo |
 | `AME_SAVER_DEST_DIR` | Override `.saver` install directory |
 | `AME_INSTALL_KARABINER=0` | Skip installing the Karabiner complex modification |
+| `AME_INSTALL_MENUBAR=1` | Install and start menu bar mode as a LaunchAgent |
 | `AME_INSTALL_WALLPAPER=1` | Install and start wallpaper mode as a LaunchAgent |
 | `AME_REPO_URL` | Override the git URL used by `scripts/bootstrap.sh` |
 | `AME_OPEN_SETTINGS=0` | Skip opening System Settings after saver install |
@@ -277,7 +320,7 @@ Useful environment variables:
 
 ```text
 Sources/ame/main.swift
-  CLI entry point, overlay app lifecycle, screen saver launch
+  CLI entry point, overlay app lifecycle, menu bar controller, screen saver launch
 
 Sources/ame/AmeConfiguration.swift
   TOML/JSON config loading, presets, screen saver container paths

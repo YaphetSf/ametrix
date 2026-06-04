@@ -5,6 +5,7 @@ private enum CommandLineMode {
     case startScreenSaver
     case overlay
     case wallpaper
+    case menuBar(startWallpaper: Bool)
     case printConfig
     case help
 }
@@ -38,6 +39,95 @@ private final class OverlayWindow: NSWindow {
 private enum OverlayMode {
     case overlay
     case wallpaper
+}
+
+private final class OverlaySessionManager {
+    private let mode: OverlayMode
+    private var sessions: [OverlaySession] = []
+    private var screenObserver: NSObjectProtocol?
+    private var screenChangeWorkItem: DispatchWorkItem?
+    private(set) var isRunning = false
+
+    init(mode: OverlayMode) {
+        self.mode = mode
+    }
+
+    func start() {
+        guard !isRunning else {
+            return
+        }
+
+        isRunning = true
+        installScreenObserver()
+        rebuildSessions()
+    }
+
+    func stop() {
+        guard isRunning || screenObserver != nil || !sessions.isEmpty else {
+            return
+        }
+
+        isRunning = false
+        screenChangeWorkItem?.cancel()
+        screenChangeWorkItem = nil
+
+        if let screenObserver {
+            NotificationCenter.default.removeObserver(screenObserver)
+            self.screenObserver = nil
+        }
+
+        closeSessions()
+    }
+
+    private func installScreenObserver() {
+        guard screenObserver == nil else {
+            return
+        }
+
+        screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.scheduleScreenRebuild()
+        }
+    }
+
+    private func scheduleScreenRebuild() {
+        guard isRunning else {
+            return
+        }
+
+        screenChangeWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.rebuildSessions()
+        }
+        screenChangeWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: workItem)
+    }
+
+    private func rebuildSessions() {
+        guard isRunning else {
+            return
+        }
+
+        closeSessions()
+        let configuration = AmeConfiguration.load()
+
+        sessions = NSScreen.screens.map {
+            OverlaySession(screen: $0, configuration: configuration, mode: mode)
+        }
+
+        if mode == .overlay, let firstWindow = sessions.first?.window {
+            firstWindow.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    private func closeSessions() {
+        let activeSessions = sessions
+        sessions.removeAll()
+        activeSessions.forEach { $0.close() }
+    }
 }
 
 private final class OverlaySession {
@@ -95,16 +185,14 @@ private final class OverlaySession {
 
 private final class AppDelegate: NSObject, NSApplicationDelegate {
     private let mode: OverlayMode
-    private var sessions: [OverlaySession] = []
+    private let sessionManager: OverlaySessionManager
     private var keyMonitor: Any?
-    private var screenObserver: NSObjectProtocol?
-    private var screenChangeWorkItem: DispatchWorkItem?
     private var cursorHidden = false
-    private var terminating = false
     private var originalPresentationOptions: NSApplication.PresentationOptions = []
 
     init(mode: OverlayMode) {
         self.mode = mode
+        self.sessionManager = OverlaySessionManager(mode: mode)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -113,7 +201,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         if mode == .overlay {
             installKeyMonitor()
         }
-        installScreenObserver()
         if mode == .overlay {
             hideCursor()
         }
@@ -125,20 +212,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             ]
         }
 
-        rebuildOverlays()
+        sessionManager.start()
         if mode == .overlay {
             NSApp.activate(ignoringOtherApps: true)
         }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        terminating = true
         tearDown()
         return .terminateNow
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        terminating = true
         tearDown()
     }
 
@@ -150,42 +235,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             return event
-        }
-    }
-
-    private func installScreenObserver() {
-        screenObserver = NotificationCenter.default.addObserver(
-            forName: NSApplication.didChangeScreenParametersNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.scheduleScreenRebuild()
-        }
-    }
-
-    private func scheduleScreenRebuild() {
-        guard !terminating else {
-            return
-        }
-
-        screenChangeWorkItem?.cancel()
-        let workItem = DispatchWorkItem { [weak self] in
-            self?.rebuildOverlays()
-        }
-        screenChangeWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: workItem)
-    }
-
-    private func rebuildOverlays() {
-        closeSessions()
-        let configuration = AmeConfiguration.load()
-
-        sessions = NSScreen.screens.map {
-            OverlaySession(screen: $0, configuration: configuration, mode: mode)
-        }
-
-        if mode == .overlay, let firstWindow = sessions.first?.window {
-            firstWindow.makeKeyAndOrderFront(nil)
         }
     }
 
@@ -208,28 +257,143 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func tearDown() {
-        screenChangeWorkItem?.cancel()
-        screenChangeWorkItem = nil
-
         if let keyMonitor {
             NSEvent.removeMonitor(keyMonitor)
             self.keyMonitor = nil
         }
 
-        if let screenObserver {
-            NotificationCenter.default.removeObserver(screenObserver)
-            self.screenObserver = nil
-        }
-
-        closeSessions()
+        sessionManager.stop()
         unhideCursor()
         NSApp.presentationOptions = originalPresentationOptions
     }
+}
 
-    private func closeSessions() {
-        let activeSessions = sessions
-        sessions.removeAll()
-        activeSessions.forEach { $0.close() }
+private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
+    private enum DefaultsKey {
+        static let wallpaperEnabled = "AmeMenuBarWallpaperEnabled"
+    }
+
+    private let wallpaperManager = OverlaySessionManager(mode: .wallpaper)
+    private let startWallpaper: Bool
+    private var statusItem: NSStatusItem?
+    private var menu: NSMenu?
+    private var wallpaperItem: NSMenuItem?
+
+    init(startWallpaper: Bool) {
+        self.startWallpaper = startWallpaper
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.accessory)
+        installStatusItem()
+
+        if startWallpaper || UserDefaults.standard.bool(forKey: DefaultsKey.wallpaperEnabled) {
+            wallpaperManager.start()
+            UserDefaults.standard.set(true, forKey: DefaultsKey.wallpaperEnabled)
+        }
+
+        updateMenu()
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        wallpaperManager.stop()
+        return .terminateNow
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        wallpaperManager.stop()
+    }
+
+    private func installStatusItem() {
+        let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let button = statusItem.button {
+            if let image = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: "Ame") {
+                image.isTemplate = true
+                button.image = image
+            } else {
+                button.title = "Ame"
+            }
+        }
+
+        let menu = NSMenu(title: "Ame")
+
+        let wallpaperItem = NSMenuItem(
+            title: "Start Wallpaper",
+            action: #selector(toggleWallpaper),
+            keyEquivalent: ""
+        )
+        wallpaperItem.target = self
+        menu.addItem(wallpaperItem)
+
+        let lockScreenItem = NSMenuItem(
+            title: "Lock Screen",
+            action: #selector(lockScreen),
+            keyEquivalent: ""
+        )
+        lockScreenItem.target = self
+        menu.addItem(lockScreenItem)
+
+        menu.addItem(.separator())
+
+        let quitItem = NSMenuItem(
+            title: "Quit Ame",
+            action: #selector(quit),
+            keyEquivalent: "q"
+        )
+        quitItem.target = self
+        menu.addItem(quitItem)
+
+        statusItem.menu = menu
+        self.statusItem = statusItem
+        self.menu = menu
+        self.wallpaperItem = wallpaperItem
+    }
+
+    private func updateMenu() {
+        let wallpaperEnabled = wallpaperManager.isRunning
+        wallpaperItem?.title = wallpaperEnabled ? "Stop Wallpaper" : "Start Wallpaper"
+        wallpaperItem?.state = wallpaperEnabled ? .on : .off
+    }
+
+    @objc private func toggleWallpaper() {
+        if wallpaperManager.isRunning {
+            wallpaperManager.stop()
+            UserDefaults.standard.set(false, forKey: DefaultsKey.wallpaperEnabled)
+        } else {
+            wallpaperManager.start()
+            UserDefaults.standard.set(true, forKey: DefaultsKey.wallpaperEnabled)
+        }
+
+        updateMenu()
+    }
+
+    @objc private func lockScreen() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let status = startSystemScreenSaver()
+            guard status != 0 else {
+                return
+            }
+
+            DispatchQueue.main.async {
+                self.showScreenSaverError()
+            }
+        }
+    }
+
+    @objc private func quit() {
+        wallpaperManager.stop()
+        NSApp.terminate(nil)
+    }
+
+    private func showScreenSaverError() {
+        NSApp.activate(ignoringOtherApps: true)
+
+        let alert = NSAlert()
+        alert.messageText = "Ame could not start the lock screen."
+        alert.informativeText = "Install Ame.saver with scripts/install.sh, then select Ame once in System Settings > Screen Saver."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 }
 
@@ -245,6 +409,14 @@ private func parseMode(arguments: [String]) -> CommandLineMode? {
 
     if args == ["--wallpaper"] {
         return .wallpaper
+    }
+
+    if args == ["--menubar"] || args == ["--menu-bar"] {
+        return .menuBar(startWallpaper: false)
+    }
+
+    if args == ["--menubar", "--wallpaper"] || args == ["--menu-bar", "--wallpaper"] {
+        return .menuBar(startWallpaper: true)
     }
 
     if args == ["--print-config"] {
@@ -265,6 +437,9 @@ private func printUsage() {
           ame                Start the currently selected macOS screen saver
           ame --overlay      Run Ame's direct full-screen overlay
           ame --wallpaper    Run Ame as a desktop-level live wallpaper
+          ame --menubar      Run Ame as a menu bar controller
+          ame --menubar --wallpaper
+                             Run menu bar mode and start wallpaper immediately
           ame --print-config Print the resolved config source
           ame --help         Show this help
 
@@ -361,11 +536,21 @@ private func startSystemScreenSaver() -> Int32 {
 }
 
 private var overlayDelegate: AppDelegate?
+private var menuBarDelegate: MenuBarDelegate?
 
 private func runOverlay(mode: OverlayMode) {
     let app = NSApplication.shared
     let delegate = AppDelegate(mode: mode)
     overlayDelegate = delegate
+    app.delegate = delegate
+    app.setActivationPolicy(.accessory)
+    app.run()
+}
+
+private func runMenuBar(startWallpaper: Bool) {
+    let app = NSApplication.shared
+    let delegate = MenuBarDelegate(startWallpaper: startWallpaper)
+    menuBarDelegate = delegate
     app.delegate = delegate
     app.setActivationPolicy(.accessory)
     app.run()
@@ -401,6 +586,8 @@ case .overlay:
     runOverlay(mode: .overlay)
 case .wallpaper:
     runOverlay(mode: .wallpaper)
+case .menuBar(let startWallpaper):
+    runMenuBar(startWallpaper: startWallpaper)
 case .printConfig:
     printConfig()
 case .help:
