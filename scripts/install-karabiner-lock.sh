@@ -55,6 +55,11 @@ JSON
 
 echo "Installed Karabiner rule to $RULE_PATH"
 echo ""
+if [[ ! -d "/Applications/Karabiner-Elements.app" ]]; then
+  echo "Karabiner-Elements was not found in /Applications."
+  echo "Install it first if you want Ctrl-Command-Q to trigger Ame."
+  echo ""
+fi
 echo "Enable it in Karabiner-Elements:"
 echo "  Complex Modifications -> Add predefined rule -> Ame -> Enable"
 echo ""

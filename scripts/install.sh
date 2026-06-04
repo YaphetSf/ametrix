@@ -18,7 +18,20 @@ mkdir -p "$(dirname "$BIN_DEST")"
 cp "$ROOT_DIR/.build/release/ame" "$BIN_DEST"
 
 "$ROOT_DIR/scripts/install-config.sh"
-AME_OPEN_SETTINGS="${AME_OPEN_SETTINGS:-0}" "$ROOT_DIR/scripts/install-screensaver.sh"
+AME_OPEN_SETTINGS="${AME_OPEN_SETTINGS:-1}" "$ROOT_DIR/scripts/install-screensaver.sh"
 
+if [[ "${AME_INSTALL_KARABINER:-1}" == "1" ]]; then
+  AME_BIN_DEST="$BIN_DEST" "$ROOT_DIR/scripts/install-karabiner-lock.sh"
+fi
+
+echo ""
 echo "Installed CLI to $BIN_DEST"
-echo "Run: ame"
+echo ""
+echo "Next steps:"
+echo "  1. Select Ame once in System Settings > Screen Saver."
+echo "  2. Set macOS to require password immediately after the screen saver begins."
+if [[ "${AME_INSTALL_KARABINER:-1}" == "1" ]]; then
+  echo "  3. In Karabiner-Elements, enable: Ame -> Ctrl-Command-Q starts Ame screen saver."
+fi
+echo ""
+echo "Try it now: ame"

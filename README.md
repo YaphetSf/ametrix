@@ -1,12 +1,25 @@
 # Ame
 
-A native macOS Matrix-style digital rain screen saver.
+A native macOS Matrix-style digital rain screen saver and lock-screen trigger.
 
-Ame can run as a real macOS `.saver` bundle, or as a direct full-screen overlay for quick manual use. The renderer is native AppKit/CoreText code: no terminal emulator, PTY, shell animation process, or external Matrix-rain dependency is required.
+Ame installs as a real macOS `.saver` bundle. It can also be launched manually
+from the command line, Raycast, or Karabiner-Elements. The renderer is native
+AppKit/CoreText code: no terminal emulator, PTY, shell animation process, or
+external Matrix-rain dependency is required.
+
+The practical daily workflow is:
+
+```text
+Ctrl-Cmd-Q -> Karabiner -> ame -> macOS screen saver -> macOS unlock/auth
+```
+
+macOS still handles the actual authentication layer: password, Touch ID, Apple
+Watch unlock, and screen-saver password policy.
 
 ## Features
 
 - Native macOS screen saver bundle
+- Optional `Ctrl-Cmd-Q` trigger through Karabiner-Elements
 - Manual full-screen overlay mode
 - Multi-display support
 - Configurable color presets, density, speed, trails, font, and glyph palette
@@ -18,24 +31,47 @@ Ame can run as a real macOS `.saver` bundle, or as a direct full-screen overlay 
 - macOS 13 or newer
 - Swift 5.9 or newer
 - Xcode for building the `.saver` bundle
+- Karabiner-Elements, optional, for the `Ctrl-Cmd-Q` trigger
 
-## Install
+## Quick Start
+
+Run the installer from Terminal:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | bash
+```
+
+The installer builds and installs:
+
+- Builds the release CLI with SwiftPM
+- Installs `ame` to `$(brew --prefix)/bin/ame`, `~/.local/bin/ame`, or `AME_BIN_DEST`
+- Installs `Ame.saver` to `~/Library/Screen Savers/Ame.saver`
+- Creates a default config when needed
+- Syncs the config into the macOS screen saver container
+- Installs a Karabiner complex modification for `Ctrl-Cmd-Q`
+- Opens macOS Screen Saver settings
+
+After the installer finishes:
+
+1. Select **Ame** once in **System Settings -> Screen Saver**.
+2. In **System Settings -> Lock Screen**, set password requirement to
+   immediately after the screen saver begins.
+3. In **Karabiner-Elements -> Complex Modifications -> Add predefined rule**,
+   enable **Ame -> Ctrl-Command-Q starts Ame screen saver**.
+
+Now press `Ctrl-Cmd-Q`.
+
+If you do not use Karabiner:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_KARABINER=0 bash
+```
+
+If you already cloned the repo:
 
 ```bash
 scripts/install.sh
 ```
-
-The installer:
-
-- Builds the release CLI with SwiftPM
-- Installs `ame` to `AME_BIN_DEST` when set
-- Otherwise installs to `$(brew --prefix)/bin/ame` when Homebrew is available
-- Falls back to `~/.local/bin/ame`
-- Installs `Ame.saver` to `~/Library/Screen Savers/Ame.saver`
-- Creates a default config when needed
-- Syncs the config into the macOS screen saver container
-
-After installing, select **Ame** once in **System Settings -> Screen Saver**.
 
 ## Usage
 
@@ -61,6 +97,26 @@ Screen saver mode is controlled by macOS. Wake, unlock, password, Touch ID, and 
 
 Overlay mode opens one borderless window per display. Press `Esc` or `Cmd-Q` to quit.
 
+## Lock Shortcut
+
+Ame does not try to draw over the macOS lock screen. That boundary is owned by
+macOS. Instead, the Karabiner rule remaps `Ctrl-Cmd-Q` to start the Ame screen
+saver. With macOS configured to require a password immediately after the screen
+saver starts, the result behaves like a lock shortcut while keeping the system
+authentication flow intact.
+
+Install or refresh the Karabiner rule manually:
+
+```bash
+scripts/install-karabiner-lock.sh
+```
+
+Karabiner command output is written to:
+
+```bash
+/tmp/ame-karabiner.log
+```
+
 ## Raycast
 
 A Raycast Script Command is included at:
@@ -68,22 +124,6 @@ A Raycast Script Command is included at:
 ```bash
 scripts/raycast-ame.sh
 ```
-
-## Karabiner
-
-Install a Karabiner-Elements complex modification that remaps `Ctrl-Cmd-Q`
-to start the selected macOS screen saver with Ame:
-
-```bash
-scripts/install-karabiner-lock.sh
-```
-
-Then enable **Ame -> Ctrl-Command-Q starts Ame screen saver** in
-Karabiner-Elements under **Complex Modifications -> Add predefined rule**.
-
-For lock behavior, configure macOS to require a password immediately after the
-screen saver begins. Ame starts the system screen saver; macOS still handles
-authentication, Touch ID, Apple Watch unlock, and password policy.
 
 ## Configuration
 
@@ -172,6 +212,12 @@ Build and install everything:
 scripts/install.sh
 ```
 
+Test the remote bootstrap installer locally:
+
+```bash
+scripts/bootstrap.sh
+```
+
 Build only the screen saver bundle:
 
 ```bash
@@ -184,7 +230,10 @@ Useful environment variables:
 |---|---|
 | `AME_BIN_DEST` | Override CLI install path |
 | `AME_CONFIG_DIR` | Override canonical config directory |
+| `AME_INSTALL_DIR` | Override where `scripts/bootstrap.sh` clones the repo |
 | `AME_SAVER_DEST_DIR` | Override `.saver` install directory |
+| `AME_INSTALL_KARABINER=0` | Skip installing the Karabiner complex modification |
+| `AME_REPO_URL` | Override the git URL used by `scripts/bootstrap.sh` |
 | `AME_OPEN_SETTINGS=0` | Skip opening System Settings after saver install |
 | `DEVELOPER_DIR` | Select a specific Xcode toolchain; otherwise `/Applications/Xcode.app` is used when present |
 
