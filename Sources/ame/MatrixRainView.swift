@@ -1,5 +1,6 @@
 import AppKit
 import CoreText
+import CoreVideo
 import Foundation
 
 final class MatrixRainView: NSView {
@@ -21,7 +22,8 @@ final class MatrixRainView: NSView {
     private var rowCount = 0
     private var cellWidth: CGFloat = 10
     private var cellHeight: CGFloat = 18
-    private var timer: Timer?
+    private var displayLink: CVDisplayLink?
+    private var fallbackTimer: Timer?
     private var lastFrameTime: TimeInterval?
 
     override var isFlipped: Bool { false }
@@ -113,27 +115,61 @@ final class MatrixRainView: NSView {
     }
 
     private func startAnimating() {
-        guard timer == nil else {
+        guard displayLink == nil, fallbackTimer == nil else {
             return
         }
 
         lastFrameTime = ProcessInfo.processInfo.systemUptime
+
+        var newDisplayLink: CVDisplayLink?
+        let createResult = CVDisplayLinkCreateWithActiveCGDisplays(&newDisplayLink)
+        if createResult == kCVReturnSuccess, let newDisplayLink {
+            let context = Unmanaged.passUnretained(self).toOpaque()
+            CVDisplayLinkSetOutputCallback(newDisplayLink, matrixRainDisplayLinkCallback, context)
+
+            if CVDisplayLinkStart(newDisplayLink) == kCVReturnSuccess {
+                displayLink = newDisplayLink
+                return
+            }
+
+            CVDisplayLinkStop(newDisplayLink)
+        }
+
         let timer = Timer(timeInterval: targetFrameInterval, repeats: true) { [weak self] _ in
-            self?.tick()
+            self?.tickIfNeeded()
         }
         timer.tolerance = 0.002
         RunLoop.main.add(timer, forMode: .common)
-        self.timer = timer
+        self.fallbackTimer = timer
     }
 
     private func stopAnimating() {
-        timer?.invalidate()
-        timer = nil
+        if let displayLink {
+            CVDisplayLinkStop(displayLink)
+            self.displayLink = nil
+        }
+
+        fallbackTimer?.invalidate()
+        fallbackTimer = nil
         lastFrameTime = nil
     }
 
-    private func tick() {
+    fileprivate func displayLinkDidFire() {
+        DispatchQueue.main.async { [weak self] in
+            self?.tickIfNeeded()
+        }
+    }
+
+    private func tickIfNeeded() {
         let now = ProcessInfo.processInfo.systemUptime
+        if let lastFrameTime, now - lastFrameTime < targetFrameInterval * 0.9 {
+            return
+        }
+
+        tick(now: now)
+    }
+
+    private func tick(now: TimeInterval) {
         let delta = min(now - (lastFrameTime ?? now), 1.0 / 15.0)
         lastFrameTime = now
 
@@ -275,4 +311,21 @@ final class MatrixRainView: NSView {
 
         return glyphs
     }
+}
+
+private func matrixRainDisplayLinkCallback(
+    _ displayLink: CVDisplayLink,
+    _ now: UnsafePointer<CVTimeStamp>,
+    _ outputTime: UnsafePointer<CVTimeStamp>,
+    _ flagsIn: CVOptionFlags,
+    _ flagsOut: UnsafeMutablePointer<CVOptionFlags>,
+    _ displayLinkContext: UnsafeMutableRawPointer?
+) -> CVReturn {
+    guard let displayLinkContext else {
+        return kCVReturnSuccess
+    }
+
+    let view = Unmanaged<MatrixRainView>.fromOpaque(displayLinkContext).takeUnretainedValue()
+    view.displayLinkDidFire()
+    return kCVReturnSuccess
 }

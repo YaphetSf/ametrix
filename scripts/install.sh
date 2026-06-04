@@ -24,6 +24,10 @@ if [[ "${AME_INSTALL_KARABINER:-1}" == "1" ]]; then
   AME_BIN_DEST="$BIN_DEST" "$ROOT_DIR/scripts/install-karabiner-lock.sh"
 fi
 
+if [[ "${AME_INSTALL_WALLPAPER:-0}" == "1" ]]; then
+  AME_BIN_DEST="$BIN_DEST" "$ROOT_DIR/scripts/install-wallpaper-agent.sh"
+fi
+
 echo ""
 echo "Installed CLI to $BIN_DEST"
 echo ""
@@ -32,6 +36,9 @@ echo "  1. Select Ame once in System Settings > Screen Saver."
 echo "  2. Set macOS to require password immediately after the screen saver begins."
 if [[ "${AME_INSTALL_KARABINER:-1}" == "1" ]]; then
   echo "  3. In Karabiner-Elements, enable: Ame -> Ctrl-Command-Q starts Ame screen saver."
+fi
+if [[ "${AME_INSTALL_WALLPAPER:-0}" == "1" ]]; then
+  echo "  4. Ame wallpaper mode is installed as a login item LaunchAgent."
 fi
 echo ""
 echo "Try it now: ame"

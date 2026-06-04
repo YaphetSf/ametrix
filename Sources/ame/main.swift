@@ -4,6 +4,7 @@ import Foundation
 private enum CommandLineMode {
     case startScreenSaver
     case overlay
+    case wallpaper
     case printConfig
     case help
 }
@@ -34,11 +35,16 @@ private final class OverlayWindow: NSWindow {
     }
 }
 
+private enum OverlayMode {
+    case overlay
+    case wallpaper
+}
+
 private final class OverlaySession {
     let window: OverlayWindow
     let rainView: MatrixRainView
 
-    init(screen: NSScreen, configuration: AmeConfiguration) {
+    init(screen: NSScreen, configuration: AmeConfiguration, mode: OverlayMode) {
         let window = OverlayWindow(
             contentRect: screen.frame,
             styleMask: .borderless,
@@ -47,16 +53,18 @@ private final class OverlaySession {
             screen: screen
         )
 
-        window.level = .screenSaver
+        window.level = mode == .wallpaper ? NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow))) : .screenSaver
         window.collectionBehavior = [
             .canJoinAllSpaces,
             .stationary,
-            .fullScreenAuxiliary
+            .fullScreenAuxiliary,
+            .ignoresCycle
         ]
         window.backgroundColor = .black
         window.isOpaque = true
         window.hasShadow = false
         window.hidesOnDeactivate = false
+        window.ignoresMouseEvents = mode == .wallpaper
         window.isReleasedWhenClosed = false
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
@@ -69,7 +77,11 @@ private final class OverlaySession {
         rainView.autoresizingMask = [.width, .height]
 
         window.contentView = rainView
-        window.makeKeyAndOrderFront(nil)
+        if mode == .wallpaper {
+            window.orderFrontRegardless()
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
 
         self.window = window
         self.rainView = rainView
@@ -82,6 +94,7 @@ private final class OverlaySession {
 }
 
 private final class AppDelegate: NSObject, NSApplicationDelegate {
+    private let mode: OverlayMode
     private var sessions: [OverlaySession] = []
     private var keyMonitor: Any?
     private var screenObserver: NSObjectProtocol?
@@ -90,20 +103,32 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private var terminating = false
     private var originalPresentationOptions: NSApplication.PresentationOptions = []
 
+    init(mode: OverlayMode) {
+        self.mode = mode
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         originalPresentationOptions = NSApp.presentationOptions
 
-        installKeyMonitor()
+        if mode == .overlay {
+            installKeyMonitor()
+        }
         installScreenObserver()
-        hideCursor()
+        if mode == .overlay {
+            hideCursor()
+        }
 
-        NSApp.presentationOptions = [
-            .hideDock,
-            .hideMenuBar
-        ]
+        if mode == .overlay {
+            NSApp.presentationOptions = [
+                .hideDock,
+                .hideMenuBar
+            ]
+        }
 
         rebuildOverlays()
-        NSApp.activate(ignoringOtherApps: true)
+        if mode == .overlay {
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -156,10 +181,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         let configuration = AmeConfiguration.load()
 
         sessions = NSScreen.screens.map {
-            OverlaySession(screen: $0, configuration: configuration)
+            OverlaySession(screen: $0, configuration: configuration, mode: mode)
         }
 
-        if let firstWindow = sessions.first?.window {
+        if mode == .overlay, let firstWindow = sessions.first?.window {
             firstWindow.makeKeyAndOrderFront(nil)
         }
     }
@@ -218,6 +243,10 @@ private func parseMode(arguments: [String]) -> CommandLineMode? {
         return .overlay
     }
 
+    if args == ["--wallpaper"] {
+        return .wallpaper
+    }
+
     if args == ["--print-config"] {
         return .printConfig
     }
@@ -235,6 +264,7 @@ private func printUsage() {
         Usage:
           ame                Start the currently selected macOS screen saver
           ame --overlay      Run Ame's direct full-screen overlay
+          ame --wallpaper    Run Ame as a desktop-level live wallpaper
           ame --print-config Print the resolved config source
           ame --help         Show this help
 
@@ -332,9 +362,9 @@ private func startSystemScreenSaver() -> Int32 {
 
 private var overlayDelegate: AppDelegate?
 
-private func runOverlay() {
+private func runOverlay(mode: OverlayMode) {
     let app = NSApplication.shared
-    let delegate = AppDelegate()
+    let delegate = AppDelegate(mode: mode)
     overlayDelegate = delegate
     app.delegate = delegate
     app.setActivationPolicy(.accessory)
@@ -368,7 +398,9 @@ switch mode {
 case .startScreenSaver:
     exit(startSystemScreenSaver())
 case .overlay:
-    runOverlay()
+    runOverlay(mode: .overlay)
+case .wallpaper:
+    runOverlay(mode: .wallpaper)
 case .printConfig:
     printConfig()
 case .help:

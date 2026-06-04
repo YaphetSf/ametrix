@@ -20,6 +20,7 @@ Watch unlock, and screen-saver password policy.
 
 - Native macOS screen saver bundle
 - Optional `Ctrl-Cmd-Q` trigger through Karabiner-Elements
+- Optional live wallpaper mode
 - Manual full-screen overlay mode
 - Multi-display support
 - Configurable color presets, density, speed, trails, font, and glyph palette
@@ -67,6 +68,12 @@ If you do not use Karabiner:
 curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_KARABINER=0 bash
 ```
 
+If you want Ame to also run as a live wallpaper at login:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_WALLPAPER=1 bash
+```
+
 If you already cloned the repo:
 
 ```bash
@@ -87,6 +94,12 @@ Run Ame directly as an overlay:
 ame --overlay
 ```
 
+Run Ame as a desktop-level live wallpaper:
+
+```bash
+ame --wallpaper
+```
+
 Inspect the resolved config:
 
 ```bash
@@ -96,6 +109,28 @@ ame --print-config
 Screen saver mode is controlled by macOS. Wake, unlock, password, Touch ID, and Apple Watch unlock behavior are handled by the system.
 
 Overlay mode opens one borderless window per display. Press `Esc` or `Cmd-Q` to quit.
+
+Wallpaper mode runs behind normal desktop windows, joins all Spaces, and ignores
+mouse events. It is a normal app window, not a native item in macOS Wallpaper
+settings.
+
+Install wallpaper mode as a login item:
+
+```bash
+scripts/install-wallpaper-agent.sh
+```
+
+Remove the login item:
+
+```bash
+scripts/install-wallpaper-agent.sh --uninstall
+```
+
+Install everything and enable wallpaper mode immediately:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_WALLPAPER=1 bash
+```
 
 ## Lock Shortcut
 
@@ -233,6 +268,7 @@ Useful environment variables:
 | `AME_INSTALL_DIR` | Override where `scripts/bootstrap.sh` clones the repo |
 | `AME_SAVER_DEST_DIR` | Override `.saver` install directory |
 | `AME_INSTALL_KARABINER=0` | Skip installing the Karabiner complex modification |
+| `AME_INSTALL_WALLPAPER=1` | Install and start wallpaper mode as a LaunchAgent |
 | `AME_REPO_URL` | Override the git URL used by `scripts/bootstrap.sh` |
 | `AME_OPEN_SETTINGS=0` | Skip opening System Settings after saver install |
 | `DEVELOPER_DIR` | Select a specific Xcode toolchain; otherwise `/Applications/Xcode.app` is used when present |
