@@ -36,6 +36,7 @@ chmod 755 "$MACOS_DIR/Ametrix"
 
 ditto "$SAVER_STAGING_DIR/Ametrix.saver" "$RESOURCES_DIR/Ametrix.saver"
 ditto "$ROOT_DIR/config/config.example.toml" "$RESOURCES_DIR/config.example.toml"
+ditto "$ROOT_DIR/assets/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
 
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -48,6 +49,8 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 	<string>Ametrix</string>
 	<key>CFBundleExecutable</key>
 	<string>Ametrix</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>$BUNDLE_ID</string>
 	<key>CFBundleInfoDictionaryVersion</key>

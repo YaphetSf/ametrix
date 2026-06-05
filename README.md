@@ -1,5 +1,9 @@
 # Ametrix
 
+<p align="center">
+  <img src="assets/ametrix-icon-256.png" alt="Ametrix" width="160">
+</p>
+
 A native macOS Matrix-style digital rain screen saver and lock-screen trigger.
 
 Ametrix installs as a real macOS `.saver` bundle. It can also be launched manually
