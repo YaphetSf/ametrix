@@ -319,12 +319,7 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private func installStatusItem() {
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            if let image = NSImage(systemSymbolName: "square.grid.3x3.fill", accessibilityDescription: "Ametrix") {
-                image.isTemplate = true
-                button.image = image
-            } else {
-                button.title = "Ametrix"
-            }
+            button.image = makeMenuBarIcon()
         }
 
         let menu = NSMenu(title: "Ametrix")
@@ -485,6 +480,38 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         alert.addButton(withTitle: "OK")
         alert.runModal()
     }
+}
+
+/// Builds the menu bar status icon: a dot-matrix "A" template image so macOS
+/// tints it for light/dark menu bars automatically. Matches the app icon's
+/// matrix-grid motif at a size that stays legible in the menu bar.
+private func makeMenuBarIcon() -> NSImage {
+    let pattern = ["01110", "10001", "10001", "11111", "10001", "10001", "10001"]
+    let cols = pattern[0].count
+    let rows = pattern.count
+    let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { rect in
+        let cell = min(rect.width / CGFloat(cols), rect.height / CGFloat(rows))
+        let ox = rect.midX - cell * CGFloat(cols) / 2
+        let oy = rect.midY - cell * CGFloat(rows) / 2
+        NSColor.black.setFill()
+        let path = NSBezierPath()
+        for ri in 0..<rows {
+            let row = Array(pattern[ri])
+            for ci in 0..<cols where row[ci] == "1" {
+                let dot = NSRect(
+                    x: ox + CGFloat(ci) * cell,
+                    y: oy + CGFloat(rows - 1 - ri) * cell,
+                    width: cell, height: cell
+                ).insetBy(dx: cell * 0.10, dy: cell * 0.10)
+                path.append(NSBezierPath(roundedRect: dot, xRadius: dot.width * 0.3, yRadius: dot.width * 0.3))
+            }
+        }
+        path.fill()
+        return true
+    }
+    image.isTemplate = true
+    image.accessibilityDescription = "Ametrix"
+    return image
 }
 
 private final class PreferencesAppDelegate: NSObject, NSApplicationDelegate {
