@@ -277,6 +277,7 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private let startWallpaper: Bool
     private var statusItem: NSStatusItem?
     private var menu: NSMenu?
+    private var installScreenSaverItem: NSMenuItem?
     private var wallpaperItem: NSMenuItem?
 
     init(startWallpaper: Bool) {
@@ -317,6 +318,18 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
 
         let menu = NSMenu(title: "Ame")
 
+        if bundledScreenSaverURL() != nil {
+            let installScreenSaverItem = NSMenuItem(
+                title: "Install Screen Saver",
+                action: #selector(installScreenSaver),
+                keyEquivalent: ""
+            )
+            installScreenSaverItem.target = self
+            menu.addItem(installScreenSaverItem)
+            menu.addItem(.separator())
+            self.installScreenSaverItem = installScreenSaverItem
+        }
+
         let wallpaperItem = NSMenuItem(
             title: "Start Wallpaper",
             action: #selector(toggleWallpaper),
@@ -351,8 +364,27 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
 
     private func updateMenu() {
         let wallpaperEnabled = wallpaperManager.isRunning
+        installScreenSaverItem?.title = installedScreenSaverExists()
+            ? "Reinstall Screen Saver"
+            : "Install Screen Saver"
         wallpaperItem?.title = wallpaperEnabled ? "Stop Wallpaper" : "Start Wallpaper"
         wallpaperItem?.state = wallpaperEnabled ? .on : .off
+    }
+
+    @objc private func installScreenSaver() {
+        do {
+            try installBundledScreenSaver()
+            updateMenu()
+            showMessage(
+                title: "Ame screen saver installed.",
+                message: "Select Ame once in System Settings > Screen Saver, then set Lock Screen to require a password immediately after the screen saver begins."
+            )
+        } catch {
+            showMessage(
+                title: "Ame could not install the screen saver.",
+                message: "\(error)"
+            )
+        }
     }
 
     @objc private func toggleWallpaper() {
@@ -386,12 +418,19 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showScreenSaverError() {
+        showMessage(
+            title: "Ame could not start the lock screen.",
+            message: "Install Ame.saver, then select Ame once in System Settings > Screen Saver."
+        )
+    }
+
+    private func showMessage(title: String, message: String) {
         NSApp.activate(ignoringOtherApps: true)
 
         let alert = NSAlert()
-        alert.messageText = "Ame could not start the lock screen."
-        alert.informativeText = "Install Ame.saver with scripts/install.sh, then select Ame once in System Settings > Screen Saver."
-        alert.alertStyle = .warning
+        alert.messageText = title
+        alert.informativeText = message
+        alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
         alert.runModal()
     }
@@ -400,7 +439,7 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
 private func parseMode(arguments: [String]) -> CommandLineMode? {
     let args = Array(arguments.dropFirst())
     if args.isEmpty {
-        return .startScreenSaver
+        return launchedFromAppBundle() ? .menuBar(startWallpaper: false) : .startScreenSaver
     }
 
     if args == ["--overlay"] {
@@ -428,6 +467,10 @@ private func parseMode(arguments: [String]) -> CommandLineMode? {
     }
 
     return nil
+}
+
+private func launchedFromAppBundle() -> Bool {
+    Bundle.main.bundleURL.pathExtension == "app"
 }
 
 private func printUsage() {
@@ -466,6 +509,72 @@ private func installedScreenSaverExists() -> Bool {
     return candidates.contains {
         fileManager.fileExists(atPath: $0)
     }
+}
+
+private func bundledScreenSaverURL() -> URL? {
+    Bundle.main.url(forResource: "Ame", withExtension: "saver")
+}
+
+private func installBundledScreenSaver() throws {
+    guard let bundledScreenSaverURL = bundledScreenSaverURL() else {
+        throw NSError(
+            domain: "Ame",
+            code: 1,
+            userInfo: [
+                NSLocalizedDescriptionKey: "Ame.saver was not found inside this app bundle."
+            ]
+        )
+    }
+
+    let fileManager = FileManager.default
+    let destinationDirectory = fileManager.homeDirectoryForCurrentUser
+        .appendingPathComponent("Library", isDirectory: true)
+        .appendingPathComponent("Screen Savers", isDirectory: true)
+    let destinationURL = destinationDirectory
+        .appendingPathComponent("Ame.saver", isDirectory: true)
+
+    try fileManager.createDirectory(
+        at: destinationDirectory,
+        withIntermediateDirectories: true
+    )
+
+    if fileManager.fileExists(atPath: destinationURL.path) {
+        try fileManager.removeItem(at: destinationURL)
+    }
+
+    try fileManager.copyItem(at: bundledScreenSaverURL, to: destinationURL)
+    try installBundledConfigurationIfNeeded()
+    syncScreenSaverContainerConfiguration()
+}
+
+private func installBundledConfigurationIfNeeded() throws {
+    let fileManager = FileManager.default
+    let configurationDirectory = fileManager.homeDirectoryForCurrentUser
+        .appendingPathComponent("Library", isDirectory: true)
+        .appendingPathComponent("Application Support", isDirectory: true)
+        .appendingPathComponent("Ame", isDirectory: true)
+    let configurationURL = configurationDirectory
+        .appendingPathComponent("config.toml", isDirectory: false)
+
+    guard !fileManager.fileExists(atPath: configurationURL.path) else {
+        return
+    }
+
+    guard let bundledConfigurationURL = Bundle.main.url(forResource: "config.example", withExtension: "toml") else {
+        throw NSError(
+            domain: "Ame",
+            code: 2,
+            userInfo: [
+                NSLocalizedDescriptionKey: "config.example.toml was not found inside this app bundle."
+            ]
+        )
+    }
+
+    try fileManager.createDirectory(
+        at: configurationDirectory,
+        withIntermediateDirectories: true
+    )
+    try fileManager.copyItem(at: bundledConfigurationURL, to: configurationURL)
 }
 
 private func terminateScreenSaverHelpers() {

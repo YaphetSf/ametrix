@@ -88,6 +88,15 @@ If you already cloned the repo:
 scripts/install.sh
 ```
 
+To build a local drag-and-drop app bundle:
+
+```bash
+scripts/package-app.sh
+```
+
+This creates `dist/Ame.app`. The app runs as a menu bar controller and includes
+`Ame.saver` plus the default config template in its bundle resources.
+
 ## Usage
 
 Start the selected macOS screen saver:
@@ -136,7 +145,8 @@ settings.
 
 Menu bar mode adds an Ame icon to the macOS menu bar. Use it to start or stop
 the live wallpaper, start the selected macOS screen saver for lock-screen use,
-or quit Ame. Wallpaper state is remembered across menu bar launches.
+install the bundled screen saver, or quit Ame. Wallpaper state is remembered
+across menu bar launches.
 
 Install menu bar mode as a login item:
 
@@ -287,6 +297,12 @@ Build and install everything:
 
 ```bash
 scripts/install.sh
+```
+
+Build a local `.app` bundle:
+
+```bash
+scripts/package-app.sh
 ```
 
 Test the remote bootstrap installer locally:
