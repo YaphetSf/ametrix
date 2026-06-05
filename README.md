@@ -54,7 +54,7 @@ After installing the screen saver from the menu:
    immediately after the screen saver begins.
 
 For an optional keyboard lock shortcut, install the Karabiner rule with
-`scripts/install-karabiner-lock.sh`, then enable
+`scripts/install/karabiner-lock.sh`, then enable
 **Ametrix -> Ctrl-Command-Q starts Ametrix screen saver** in Karabiner-Elements.
 
 If you already cloned the repo:
@@ -66,7 +66,7 @@ scripts/install.sh
 To build a local drag-and-drop app bundle:
 
 ```bash
-scripts/package-app.sh
+scripts/release/package-app.sh
 ```
 
 This creates `dist/Ametrix.app`. The app runs as a menu bar controller and includes
@@ -126,13 +126,13 @@ across menu bar launches.
 Install menu bar mode as a login item:
 
 ```bash
-scripts/install-menubar-agent.sh
+scripts/install/menubar-agent.sh
 ```
 
 Remove the menu bar login item:
 
 ```bash
-scripts/install-menubar-agent.sh --uninstall
+scripts/install/menubar-agent.sh --uninstall
 ```
 
 Install everything and enable menu bar mode immediately:
@@ -152,7 +152,7 @@ authentication flow intact.
 Install or refresh the Karabiner rule manually:
 
 ```bash
-scripts/install-karabiner-lock.sh
+scripts/install/karabiner-lock.sh
 ```
 
 Karabiner command output is written to:
@@ -166,7 +166,7 @@ Karabiner command output is written to:
 A Raycast Script Command is included at:
 
 ```bash
-scripts/raycast-ametrix.sh
+scripts/integrations/raycast-ametrix.sh
 ```
 
 ## Configuration
@@ -180,7 +180,7 @@ Edit the canonical TOML config:
 Create it manually when needed:
 
 ```bash
-scripts/install-config.sh
+scripts/install/config.sh
 ```
 
 Example:
@@ -244,6 +244,17 @@ That container has its own home directory, so a screen saver process cannot reli
 
 ## Development
 
+Script layout:
+
+```text
+scripts/
+  bootstrap.sh              Remote curl installer
+  install.sh                Local one-command installer
+  install/                  Install helpers used by install.sh
+  release/                  Packaging, signing, notarization, and release helpers
+  integrations/             Optional third-party launcher scripts
+```
+
 Build the CLI:
 
 ```bash
@@ -259,7 +270,7 @@ scripts/install.sh
 Build a local `.app` bundle:
 
 ```bash
-scripts/package-app.sh
+scripts/release/package-app.sh
 ```
 
 Build, sign, notarize, and package a release DMG:
@@ -267,7 +278,7 @@ Build, sign, notarize, and package a release DMG:
 ```bash
 AMETRIX_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 AMETRIX_NOTARY_PROFILE="ametrix-notary" \
-scripts/sign-notarize-dmg.sh
+scripts/release/sign-notarize-dmg.sh
 ```
 
 Create the notarytool keychain profile once:
@@ -284,7 +295,7 @@ For a signed-only local DMG without notarization:
 ```bash
 AMETRIX_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 AMETRIX_SKIP_NOTARIZE=1 \
-scripts/sign-notarize-dmg.sh
+scripts/release/sign-notarize-dmg.sh
 ```
 
 Test the remote bootstrap installer locally:
@@ -296,7 +307,7 @@ scripts/bootstrap.sh
 Build only the screen saver bundle:
 
 ```bash
-scripts/install-screensaver.sh
+scripts/install/screensaver.sh
 ```
 
 Useful environment variables:

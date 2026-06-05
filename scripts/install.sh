@@ -17,15 +17,15 @@ swift build --disable-sandbox -c release
 mkdir -p "$(dirname "$BIN_DEST")"
 cp "$ROOT_DIR/.build/release/ametrix" "$BIN_DEST"
 
-"$ROOT_DIR/scripts/install-config.sh"
-AMETRIX_OPEN_SETTINGS="${AMETRIX_OPEN_SETTINGS:-1}" "$ROOT_DIR/scripts/install-screensaver.sh"
+"$ROOT_DIR/scripts/install/config.sh"
+AMETRIX_OPEN_SETTINGS="${AMETRIX_OPEN_SETTINGS:-1}" "$ROOT_DIR/scripts/install/screensaver.sh"
 
 if [[ "${AMETRIX_INSTALL_KARABINER:-1}" == "1" ]]; then
-  AMETRIX_BIN_DEST="$BIN_DEST" "$ROOT_DIR/scripts/install-karabiner-lock.sh"
+  AMETRIX_BIN_DEST="$BIN_DEST" "$ROOT_DIR/scripts/install/karabiner-lock.sh"
 fi
 
 if [[ "${AMETRIX_INSTALL_MENUBAR:-0}" == "1" ]]; then
-  AMETRIX_BIN_DEST="$BIN_DEST" "$ROOT_DIR/scripts/install-menubar-agent.sh"
+  AMETRIX_BIN_DEST="$BIN_DEST" "$ROOT_DIR/scripts/install/menubar-agent.sh"
 fi
 
 echo ""

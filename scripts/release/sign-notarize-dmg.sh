@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DIST_DIR="${AMETRIX_DIST_DIR:-$ROOT_DIR/dist}"
 APP_DIR="$DIST_DIR/Ametrix.app"
 DMG_STAGING_DIR="$DIST_DIR/.dmg-staging"
 DMG_PATH="${AMETRIX_DMG_PATH:-$DIST_DIR/Ametrix.dmg}"
-ENTITLEMENTS_PATH="${AMETRIX_ENTITLEMENTS_PATH:-$ROOT_DIR/scripts/entitlements.plist}"
+ENTITLEMENTS_PATH="${AMETRIX_ENTITLEMENTS_PATH:-$ROOT_DIR/scripts/release/entitlements.plist}"
 SIGN_IDENTITY="${AMETRIX_SIGN_IDENTITY:-}"
 NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-}"
 APPLE_ID="${APPLE_ID:-}"
@@ -19,7 +19,7 @@ WAIT_FOR_NOTARY="${AMETRIX_NOTARY_WAIT:-1}"
 if [[ -z "$SIGN_IDENTITY" ]]; then
   echo "Error: AMETRIX_SIGN_IDENTITY is required."
   echo "Example:"
-  echo "  AMETRIX_SIGN_IDENTITY='Developer ID Application: Your Name (TEAMID)' scripts/sign-notarize-dmg.sh"
+  echo "  AMETRIX_SIGN_IDENTITY='Developer ID Application: Your Name (TEAMID)' scripts/release/sign-notarize-dmg.sh"
   exit 1
 fi
 
@@ -31,12 +31,12 @@ fi
 cd "$ROOT_DIR"
 
 if [[ "$SKIP_PACKAGE" != "1" ]]; then
-  "$ROOT_DIR/scripts/package-app.sh"
+  "$ROOT_DIR/scripts/release/package-app.sh"
 fi
 
 if [[ ! -d "$APP_DIR" ]]; then
   echo "Error: app bundle not found: $APP_DIR"
-  echo "Run scripts/package-app.sh first, or leave AMETRIX_SKIP_PACKAGE unset."
+  echo "Run scripts/release/package-app.sh first, or leave AMETRIX_SKIP_PACKAGE unset."
   exit 1
 fi
 
@@ -123,7 +123,7 @@ fi
 
 if [[ "$WAIT_FOR_NOTARY" != "1" ]]; then
   echo "Notarization submitted without waiting."
-  echo "Check and staple later with: scripts/check-notarization.sh SUBMISSION_ID"
+  echo "Check and staple later with: scripts/release/check-notarization.sh SUBMISSION_ID"
   exit 0
 fi
 

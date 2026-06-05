@@ -94,4 +94,4 @@ echo "Removed old Ametrix/Ame menu bar and standalone wallpaper agents if they e
 if [[ "$START_WALLPAPER" == "1" ]]; then
   echo "Wallpaper starts enabled in menu bar mode."
 fi
-echo "Remove it with: scripts/install-menubar-agent.sh --uninstall"
+echo "Remove it with: scripts/install/menubar-agent.sh --uninstall"

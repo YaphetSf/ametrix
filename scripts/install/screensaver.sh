@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DERIVED_DATA="$ROOT_DIR/.build/xcode"
 PRODUCT="$DERIVED_DATA/Build/Products/Release/Ametrix.saver"
 DEST_DIR="${AMETRIX_SAVER_DEST_DIR:-$HOME/Library/Screen Savers}"

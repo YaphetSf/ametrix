@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PRIMARY_DIR="${AMETRIX_CONFIG_DIR:-$HOME/Library/Application Support/Ametrix}"
 PRIMARY_DEST="$PRIMARY_DIR/config.toml"
 LEGACY_DIR="$HOME/.config/ametrix"

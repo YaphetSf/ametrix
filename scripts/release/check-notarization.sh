@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DMG_PATH="${AMETRIX_DMG_PATH:-$ROOT_DIR/dist/Ametrix.dmg}"
-NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-ame-notary}"
+NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-ametrix-notary}"
 SUBMISSION_ID="${1:-${AMETRIX_NOTARY_SUBMISSION_ID:-}}"
 
 if [[ -z "$SUBMISSION_ID" ]]; then
   echo "Error: submission id is required."
-  echo "Usage: scripts/check-notarization.sh SUBMISSION_ID"
+  echo "Usage: scripts/release/check-notarization.sh SUBMISSION_ID"
   exit 1
 fi
 
@@ -17,7 +17,15 @@ if [[ ! -f "$DMG_PATH" ]]; then
   exit 1
 fi
 
-INFO="$(xcrun notarytool info "$SUBMISSION_ID" --keychain-profile "$NOTARY_PROFILE")"
+if ! INFO="$(xcrun notarytool info "$SUBMISSION_ID" --keychain-profile "$NOTARY_PROFILE" 2>&1)"; then
+  if [[ -z "${AMETRIX_NOTARY_PROFILE:-}" && "$NOTARY_PROFILE" == "ametrix-notary" && "$INFO" == *"No Keychain password item found"* ]]; then
+    NOTARY_PROFILE="ame-notary"
+    INFO="$(xcrun notarytool info "$SUBMISSION_ID" --keychain-profile "$NOTARY_PROFILE")"
+  else
+    echo "$INFO"
+    exit 1
+  fi
+fi
 echo "$INFO"
 
 STATUS="$(printf "%s\n" "$INFO" | awk -F': ' '/status:/ { print $2; exit }')"
