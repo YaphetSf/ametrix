@@ -145,6 +145,9 @@ private final class OverlaySession {
     let rainView: MatrixRainView
 
     init(screen: NSScreen, configuration: AmetrixConfiguration, mode: OverlayMode) {
+        // Window always fills the whole screen (opaque black). In wallpaper mode the
+        // rain itself stops below the menu bar, so the top strip stays solid black
+        // behind the menu bar instead of showing the desktop.
         let window = OverlayWindow(
             contentRect: screen.frame,
             styleMask: .borderless,
@@ -152,6 +155,7 @@ private final class OverlaySession {
             defer: false,
             screen: screen
         )
+        let rainFrame = OverlaySession.rainFrame(for: screen, mode: mode)
 
         window.level = mode == .wallpaper ? NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow))) : .screenSaver
         window.collectionBehavior = [
@@ -170,13 +174,21 @@ private final class OverlaySession {
         window.titlebarAppearsTransparent = true
         window.setFrame(screen.frame, display: true)
 
+        // Black container so any uncovered strip (the menu bar area in wallpaper
+        // mode) reads as solid black rather than the desktop behind it.
+        let container = NSView(frame: NSRect(origin: .zero, size: screen.frame.size))
+        container.wantsLayer = true
+        container.layer?.backgroundColor = NSColor.black.cgColor
+        container.autoresizingMask = [.width, .height]
+
         let rainView = MatrixRainView(
-            frame: NSRect(origin: .zero, size: screen.frame.size),
+            frame: NSRect(origin: .zero, size: rainFrame.size),
             configuration: configuration
         )
         rainView.autoresizingMask = [.width, .height]
+        container.addSubview(rainView)
 
-        window.contentView = rainView
+        window.contentView = container
         if mode == .wallpaper {
             window.orderFrontRegardless()
         } else {
@@ -190,6 +202,15 @@ private final class OverlaySession {
     func close() {
         window.orderOut(nil)
         window.close()
+    }
+
+    /// Frame the rain should occupy inside the full-screen window. Wallpaper mode
+    /// trims the top menu bar strip (left black); other modes fill the screen.
+    static func rainFrame(for screen: NSScreen, mode: OverlayMode) -> NSRect {
+        let size = screen.frame.size
+        guard mode == .wallpaper else { return NSRect(origin: .zero, size: size) }
+        let menuBarHeight = max(0, screen.frame.maxY - screen.visibleFrame.maxY)
+        return NSRect(x: 0, y: 0, width: size.width, height: size.height - menuBarHeight)
     }
 }
 
