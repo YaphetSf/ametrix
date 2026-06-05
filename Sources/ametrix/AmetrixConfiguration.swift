@@ -2,9 +2,9 @@ import AppKit
 import Darwin
 import Foundation
 
-struct AmeConfiguration {
+struct AmetrixConfiguration {
     struct LoadResult {
-        var configuration: AmeConfiguration
+        var configuration: AmetrixConfiguration
         var sourceURL: URL?
         var searchedURLs: [URL]
     }
@@ -33,7 +33,7 @@ struct AmeConfiguration {
     var trail: TrailRange
     var characters: String
 
-    static let `default` = AmeConfiguration(
+    static let `default` = AmetrixConfiguration(
         frameRate: 60,
         preset: "classic",
         density: 1.0,
@@ -48,7 +48,7 @@ struct AmeConfiguration {
         characters: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン@#$%&*+-=<>"
     )
 
-    static func load() -> AmeConfiguration {
+    static func load() -> AmetrixConfiguration {
         loadWithSource().configuration
     }
 
@@ -107,13 +107,13 @@ struct AmeConfiguration {
             $0
                 .appendingPathComponent("Library", isDirectory: true)
                 .appendingPathComponent("Application Support", isDirectory: true)
-                .appendingPathComponent("Ame", isDirectory: true)
+                .appendingPathComponent("Ametrix", isDirectory: true)
                 .appendingPathComponent(fileName, isDirectory: false)
         }
         let dotConfig = homes.map {
             $0
                 .appendingPathComponent(".config", isDirectory: true)
-                .appendingPathComponent("ame", isDirectory: true)
+                .appendingPathComponent("ametrix", isDirectory: true)
                 .appendingPathComponent(fileName, isDirectory: false)
         }
 
@@ -128,7 +128,7 @@ struct AmeConfiguration {
         return screenSaverContainerHomeDirectory(realHome: home)
             .appendingPathComponent("Library", isDirectory: true)
             .appendingPathComponent("Application Support", isDirectory: true)
-            .appendingPathComponent("Ame", isDirectory: true)
+            .appendingPathComponent("Ametrix", isDirectory: true)
             .appendingPathComponent(fileName, isDirectory: false)
     }
 
@@ -261,8 +261,8 @@ private struct RawConfiguration: Decodable {
         }
     }
 
-    func resolved() -> AmeConfiguration {
-        var configuration = AmeConfiguration.default
+    func resolved() -> AmetrixConfiguration {
+        var configuration = AmetrixConfiguration.default
 
         if let preset {
             configuration.applyPreset(preset)
@@ -304,7 +304,7 @@ private struct RawConfiguration: Decodable {
             let minSpeed = speed.min ?? configuration.speed.min
             let maxSpeed = speed.max ?? configuration.speed.max
             if minSpeed > 0, maxSpeed >= minSpeed, maxSpeed <= 120 {
-                configuration.speed = AmeConfiguration.SpeedRange(min: minSpeed, max: maxSpeed)
+                configuration.speed = AmetrixConfiguration.SpeedRange(min: minSpeed, max: maxSpeed)
             }
         }
 
@@ -313,7 +313,7 @@ private struct RawConfiguration: Decodable {
             let maxTrail = trail.max ?? configuration.trail.max
             let rowMultiplier = trail.rowMultiplier ?? configuration.trail.rowMultiplier
             if minTrail > 0, maxTrail >= minTrail, rowMultiplier > 0, rowMultiplier <= 2 {
-                configuration.trail = AmeConfiguration.TrailRange(
+                configuration.trail = AmetrixConfiguration.TrailRange(
                     min: minTrail,
                     max: maxTrail,
                     rowMultiplier: rowMultiplier
@@ -366,7 +366,7 @@ private struct RawConfiguration: Decodable {
     }
 }
 
-private extension AmeConfiguration {
+private extension AmetrixConfiguration {
     mutating func applyPreset(_ preset: String) {
         switch preset.lowercased() {
         case "classic":
@@ -433,7 +433,7 @@ private extension String {
 }
 
 extension NSColor {
-    var ameHexString: String {
+    var ametrixHexString: String {
         let color = usingColorSpace(.deviceRGB) ?? self
         let red = Int((color.redComponent * 255).rounded())
         let green = Int((color.greenComponent * 255).rounded())

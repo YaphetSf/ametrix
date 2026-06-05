@@ -2,11 +2,11 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PRIMARY_DIR="${AME_CONFIG_DIR:-$HOME/Library/Application Support/Ame}"
+PRIMARY_DIR="${AMETRIX_CONFIG_DIR:-$HOME/Library/Application Support/Ametrix}"
 PRIMARY_DEST="$PRIMARY_DIR/config.toml"
-LEGACY_DIR="$HOME/.config/ame"
+LEGACY_DIR="$HOME/.config/ametrix"
 LEGACY_DEST="$LEGACY_DIR/config.toml"
-SAVER_CONTAINER_DIR="$HOME/Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data/Library/Application Support/Ame"
+SAVER_CONTAINER_DIR="$HOME/Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data/Library/Application Support/Ametrix"
 SAVER_CONTAINER_DEST="$SAVER_CONTAINER_DIR/config.toml"
 
 mkdir -p "$PRIMARY_DIR"

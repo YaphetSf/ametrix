@@ -2,16 +2,16 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DIST_DIR="${AME_DIST_DIR:-$ROOT_DIR/dist}"
-APP_NAME="Ame.app"
+DIST_DIR="${AMETRIX_DIST_DIR:-$ROOT_DIR/dist}"
+APP_NAME="Ametrix.app"
 APP_DIR="$DIST_DIR/$APP_NAME"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 SAVER_STAGING_DIR="$DIST_DIR/.saver-staging"
-VERSION="${AME_VERSION:-0.1.0}"
-BUILD_NUMBER="${AME_BUILD_NUMBER:-1}"
-BUNDLE_ID="${AME_BUNDLE_ID:-org.ame.app}"
+VERSION="${AMETRIX_VERSION:-0.1.0}"
+BUILD_NUMBER="${AMETRIX_BUILD_NUMBER:-1}"
+BUNDLE_ID="${AMETRIX_BUNDLE_ID:-com.dingz.uk.ametrix.app}"
 
 if [[ -z "${DEVELOPER_DIR:-}" && -d "/Applications/Xcode.app/Contents/Developer" ]]; then
   export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
@@ -24,17 +24,17 @@ cd "$ROOT_DIR"
 swift build --disable-sandbox -c release
 
 rm -rf "$SAVER_STAGING_DIR"
-AME_SAVER_DEST_DIR="$SAVER_STAGING_DIR" \
-  AME_OPEN_SETTINGS=0 \
+AMETRIX_SAVER_DEST_DIR="$SAVER_STAGING_DIR" \
+  AMETRIX_OPEN_SETTINGS=0 \
   "$ROOT_DIR/scripts/install-screensaver.sh"
 
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 
-ditto "$ROOT_DIR/.build/release/ame" "$MACOS_DIR/Ame"
-chmod 755 "$MACOS_DIR/Ame"
+ditto "$ROOT_DIR/.build/release/ametrix" "$MACOS_DIR/Ametrix"
+chmod 755 "$MACOS_DIR/Ametrix"
 
-ditto "$SAVER_STAGING_DIR/Ame.saver" "$RESOURCES_DIR/Ame.saver"
+ditto "$SAVER_STAGING_DIR/Ametrix.saver" "$RESOURCES_DIR/Ametrix.saver"
 ditto "$ROOT_DIR/config/config.example.toml" "$RESOURCES_DIR/config.example.toml"
 
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
@@ -45,15 +45,15 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Ame</string>
+	<string>Ametrix</string>
 	<key>CFBundleExecutable</key>
-	<string>Ame</string>
+	<string>Ametrix</string>
 	<key>CFBundleIdentifier</key>
 	<string>$BUNDLE_ID</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Ame</string>
+	<string>Ametrix</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

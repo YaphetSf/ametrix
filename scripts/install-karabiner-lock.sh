@@ -1,36 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ -n "${AME_BIN_DEST:-}" ]]; then
-  AME_PATH="$AME_BIN_DEST"
-elif command -v ame >/dev/null 2>&1; then
-  AME_PATH="$(command -v ame)"
-elif command -v brew >/dev/null 2>&1 && [[ -x "$(brew --prefix)/bin/ame" ]]; then
-  AME_PATH="$(brew --prefix)/bin/ame"
-elif [[ -x "$HOME/.local/bin/ame" ]]; then
-  AME_PATH="$HOME/.local/bin/ame"
+if [[ -n "${AMETRIX_BIN_DEST:-}" ]]; then
+  AMETRIX_PATH="$AMETRIX_BIN_DEST"
+elif command -v ametrix >/dev/null 2>&1; then
+  AMETRIX_PATH="$(command -v ametrix)"
+elif command -v brew >/dev/null 2>&1 && [[ -x "$(brew --prefix)/bin/ametrix" ]]; then
+  AMETRIX_PATH="$(brew --prefix)/bin/ametrix"
+elif [[ -x "$HOME/.local/bin/ametrix" ]]; then
+  AMETRIX_PATH="$HOME/.local/bin/ametrix"
 else
-  echo "Error: ame binary not found."
-  echo "Run scripts/install.sh first, or set AME_BIN_DEST to the installed ame path."
+  echo "Error: ametrix binary not found."
+  echo "Run scripts/install.sh first, or set AMETRIX_BIN_DEST to the installed ametrix path."
   exit 1
 fi
 
-if [[ ! -x "$AME_PATH" ]]; then
-  echo "Error: ame is not executable at $AME_PATH"
+if [[ ! -x "$AMETRIX_PATH" ]]; then
+  echo "Error: ametrix is not executable at $AMETRIX_PATH"
   exit 1
 fi
 
 KARABINER_DIR="$HOME/.config/karabiner/assets/complex_modifications"
-RULE_PATH="$KARABINER_DIR/ame-lock-screen.json"
+RULE_PATH="$KARABINER_DIR/ametrix-lock-screen.json"
 
 mkdir -p "$KARABINER_DIR"
 
 cat > "$RULE_PATH" <<JSON
 {
-  "title": "Ame",
+  "title": "Ametrix",
   "rules": [
     {
-      "description": "Ctrl-Command-Q starts Ame screen saver",
+      "description": "Ctrl-Command-Q starts Ametrix screen saver",
       "manipulators": [
         {
           "type": "basic",
@@ -43,7 +43,7 @@ cat > "$RULE_PATH" <<JSON
           },
           "to": [
             {
-              "shell_command": "nohup '${AME_PATH}' >/tmp/ame-karabiner.log 2>&1 &"
+              "shell_command": "nohup '${AMETRIX_PATH}' >/tmp/ametrix-karabiner.log 2>&1 &"
             }
           ]
         }
@@ -57,11 +57,11 @@ echo "Installed Karabiner rule to $RULE_PATH"
 echo ""
 if [[ ! -d "/Applications/Karabiner-Elements.app" ]]; then
   echo "Karabiner-Elements was not found in /Applications."
-  echo "Install it first if you want Ctrl-Command-Q to trigger Ame."
+  echo "Install it first if you want Ctrl-Command-Q to trigger Ametrix."
   echo ""
 fi
 echo "Enable it in Karabiner-Elements:"
-echo "  Complex Modifications -> Add predefined rule -> Ame -> Enable"
+echo "  Complex Modifications -> Add predefined rule -> Ametrix -> Enable"
 echo ""
 echo "For lock-on-screen-saver behavior, set macOS to require password immediately after the screen saver begins."
-echo "Karabiner command log: /tmp/ame-karabiner.log"
+echo "Karabiner command log: /tmp/ametrix-karabiner.log"

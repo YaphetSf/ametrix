@@ -11,7 +11,7 @@ final class MatrixRainView: NSView {
         var glyphOffset: Int
     }
 
-    private let configuration: AmeConfiguration
+    private let configuration: AmetrixConfiguration
     private let targetFrameInterval: TimeInterval
     private let font: NSFont
     private let ctFont: CTFont
@@ -28,7 +28,7 @@ final class MatrixRainView: NSView {
 
     override var isFlipped: Bool { false }
 
-    init(frame frameRect: NSRect, configuration: AmeConfiguration = .load()) {
+    init(frame frameRect: NSRect, configuration: AmetrixConfiguration = .load()) {
         self.configuration = configuration
         self.targetFrameInterval = 1.0 / configuration.frameRate
         let selectedFont = NSFont(name: configuration.fontName, size: configuration.fontSize)
@@ -49,7 +49,7 @@ final class MatrixRainView: NSView {
     }
 
     required init?(coder: NSCoder) {
-        let configuration = AmeConfiguration.load()
+        let configuration = AmetrixConfiguration.load()
         self.configuration = configuration
         self.targetFrameInterval = 1.0 / configuration.frameRate
         let selectedFont = NSFont(name: configuration.fontName, size: configuration.fontSize)

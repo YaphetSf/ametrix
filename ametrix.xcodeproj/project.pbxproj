@@ -7,19 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3A0000010000000000000001 /* AmeScreenSaverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0000010000000000000002 /* AmeScreenSaverView.swift */; };
+		3A0000010000000000000001 /* AmetrixScreenSaverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0000010000000000000002 /* AmetrixScreenSaverView.swift */; };
 		3A0000010000000000000003 /* MatrixRainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0000010000000000000004 /* MatrixRainView.swift */; };
 		3A0000010000000000000005 /* ScreenSaver.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A0000010000000000000006 /* ScreenSaver.framework */; };
-		3A0000010000000000000018 /* AmeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0000010000000000000019 /* AmeConfiguration.swift */; };
+		3A0000010000000000000018 /* AmetrixConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0000010000000000000019 /* AmetrixConfiguration.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		3A0000010000000000000002 /* AmeScreenSaverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmeScreenSaverView.swift; sourceTree = "<group>"; };
-		3A0000010000000000000004 /* MatrixRainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MatrixRainView.swift; path = ../ame/MatrixRainView.swift; sourceTree = "<group>"; };
+		3A0000010000000000000002 /* AmetrixScreenSaverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmetrixScreenSaverView.swift; sourceTree = "<group>"; };
+		3A0000010000000000000004 /* MatrixRainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MatrixRainView.swift; path = ../ametrix/MatrixRainView.swift; sourceTree = "<group>"; };
 		3A0000010000000000000006 /* ScreenSaver.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScreenSaver.framework; path = System/Library/Frameworks/ScreenSaver.framework; sourceTree = SDKROOT; };
 		3A0000010000000000000007 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3A0000010000000000000008 /* Ame.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Ame.saver; sourceTree = BUILT_PRODUCTS_DIR; };
-		3A0000010000000000000019 /* AmeConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmeConfiguration.swift; path = ../ame/AmeConfiguration.swift; sourceTree = "<group>"; };
+		3A0000010000000000000008 /* Ametrix.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Ametrix.saver; sourceTree = BUILT_PRODUCTS_DIR; };
+		3A0000010000000000000019 /* AmetrixConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmetrixConfiguration.swift; path = ../ametrix/AmetrixConfiguration.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,20 +46,20 @@
 		3A000001000000000000000B /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				3A000001000000000000000E /* AmeScreenSaver */,
+				3A000001000000000000000E /* AmetrixScreenSaver */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
 		};
-		3A000001000000000000000E /* AmeScreenSaver */ = {
+		3A000001000000000000000E /* AmetrixScreenSaver */ = {
 			isa = PBXGroup;
 			children = (
-				3A0000010000000000000002 /* AmeScreenSaverView.swift */,
+				3A0000010000000000000002 /* AmetrixScreenSaverView.swift */,
 				3A0000010000000000000004 /* MatrixRainView.swift */,
-				3A0000010000000000000019 /* AmeConfiguration.swift */,
+				3A0000010000000000000019 /* AmetrixConfiguration.swift */,
 				3A0000010000000000000007 /* Info.plist */,
 			);
-			path = AmeScreenSaver;
+			path = AmetrixScreenSaver;
 			sourceTree = "<group>";
 		};
 		3A000001000000000000000C /* Frameworks */ = {
@@ -73,7 +73,7 @@
 		3A000001000000000000000D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3A0000010000000000000008 /* Ame.saver */,
+				3A0000010000000000000008 /* Ametrix.saver */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -81,9 +81,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3A000001000000000000000F /* AmeScreenSaver */ = {
+		3A000001000000000000000F /* AmetrixScreenSaver */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3A0000010000000000000010 /* Build configuration list for PBXNativeTarget "AmeScreenSaver" */;
+			buildConfigurationList = 3A0000010000000000000010 /* Build configuration list for PBXNativeTarget "AmetrixScreenSaver" */;
 			buildPhases = (
 				3A0000010000000000000011 /* Sources */,
 				3A0000010000000000000009 /* Frameworks */,
@@ -92,9 +92,9 @@
 			);
 			dependencies = (
 			);
-			name = AmeScreenSaver;
-			productName = Ame;
-			productReference = 3A0000010000000000000008 /* Ame.saver */;
+			name = AmetrixScreenSaver;
+			productName = Ametrix;
+			productReference = 3A0000010000000000000008 /* Ametrix.saver */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -112,7 +112,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 3A0000010000000000000013 /* Build configuration list for PBXProject "ame" */;
+			buildConfigurationList = 3A0000010000000000000013 /* Build configuration list for PBXProject "ametrix" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -125,7 +125,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3A000001000000000000000F /* AmeScreenSaver */,
+				3A000001000000000000000F /* AmetrixScreenSaver */,
 			);
 		};
 /* End PBXProject section */
@@ -135,9 +135,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3A0000010000000000000001 /* AmeScreenSaverView.swift in Sources */,
+				3A0000010000000000000001 /* AmetrixScreenSaverView.swift in Sources */,
 				3A0000010000000000000003 /* MatrixRainView.swift in Sources */,
-				3A0000010000000000000018 /* AmeConfiguration.swift in Sources */,
+				3A0000010000000000000018 /* AmetrixConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,15 +264,15 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_LANGUAGE = en;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Sources/AmeScreenSaver/Info.plist;
+				INFOPLIST_FILE = Sources/AmetrixScreenSaver/Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Screen Savers";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.ame.screensaver;
-				PRODUCT_NAME = Ame;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dingz.uk.ametrix.screensaver;
+				PRODUCT_NAME = Ametrix;
 				SKIP_INSTALL = NO;
 				SWIFT_VERSION = 5.0;
 				WRAPPER_EXTENSION = saver;
@@ -286,15 +286,15 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_LANGUAGE = en;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Sources/AmeScreenSaver/Info.plist;
+				INFOPLIST_FILE = Sources/AmetrixScreenSaver/Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Screen Savers";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.ame.screensaver;
-				PRODUCT_NAME = Ame;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dingz.uk.ametrix.screensaver;
+				PRODUCT_NAME = Ametrix;
 				SKIP_INSTALL = NO;
 				SWIFT_VERSION = 5.0;
 				WRAPPER_EXTENSION = saver;
@@ -304,7 +304,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		3A0000010000000000000013 /* Build configuration list for PBXProject "ame" */ = {
+		3A0000010000000000000013 /* Build configuration list for PBXProject "ametrix" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3A0000010000000000000014 /* Debug */,
@@ -313,7 +313,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3A0000010000000000000010 /* Build configuration list for PBXNativeTarget "AmeScreenSaver" */ = {
+		3A0000010000000000000010 /* Build configuration list for PBXNativeTarget "AmetrixScreenSaver" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3A0000010000000000000016 /* Debug */,

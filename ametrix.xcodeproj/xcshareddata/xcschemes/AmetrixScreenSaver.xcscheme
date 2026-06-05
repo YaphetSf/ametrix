@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3A000001000000000000000F"
-               BuildableName = "Ame.saver"
-               BlueprintName = "AmeScreenSaver"
-               ReferencedContainer = "container:ame.xcodeproj">
+               BuildableName = "Ametrix.saver"
+               BlueprintName = "AmetrixScreenSaver"
+               ReferencedContainer = "container:ametrix.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

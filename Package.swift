@@ -3,14 +3,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "ame",
+    name: "ametrix",
     platforms: [
         .macOS(.v13)
     ],
     dependencies: [],
     targets: [
         .executableTarget(
-            name: "ame",
+            name: "ametrix",
             dependencies: []
         )
     ]

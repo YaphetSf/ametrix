@@ -1,8 +1,8 @@
-# Ame
+# Ametrix
 
 A native macOS Matrix-style digital rain screen saver and lock-screen trigger.
 
-Ame installs as a real macOS `.saver` bundle. It can also be launched manually
+Ametrix installs as a real macOS `.saver` bundle. It can also be launched manually
 from the command line, Raycast, or Karabiner-Elements. The renderer is native
 AppKit/CoreText code: no terminal emulator, PTY, shell animation process, or
 external Matrix-rain dependency is required.
@@ -10,7 +10,7 @@ external Matrix-rain dependency is required.
 The practical daily workflow is:
 
 ```text
-Ctrl-Cmd-Q -> Karabiner -> ame -> macOS screen saver -> macOS unlock/auth
+Ctrl-Cmd-Q -> Karabiner -> ametrix -> macOS screen saver -> macOS unlock/auth
 ```
 
 macOS still handles the actual authentication layer: password, Touch ID, Apple
@@ -37,50 +37,25 @@ Watch unlock, and screen-saver password policy.
 
 ## Quick Start
 
-Run the installer from Terminal:
+Download `Ametrix.dmg` from the latest GitHub release, open it, and drag
+`Ametrix.app` to Applications.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | bash
-```
+Launch Ametrix once from Applications. The menu bar icon lets you:
 
-The installer builds and installs:
+- Install or reinstall the bundled `Ametrix.saver`
+- Start or stop the live wallpaper
+- Start the selected macOS screen saver for lock-screen use
+- Quit Ametrix
 
-- Builds the release CLI with SwiftPM
-- Installs `ame` to `$(brew --prefix)/bin/ame`, `~/.local/bin/ame`, or `AME_BIN_DEST`
-- Installs `Ame.saver` to `~/Library/Screen Savers/Ame.saver`
-- Creates a default config when needed
-- Syncs the config into the macOS screen saver container
-- Installs a Karabiner complex modification for `Ctrl-Cmd-Q`
-- Opens macOS Screen Saver settings
+After installing the screen saver from the menu:
 
-After the installer finishes:
-
-1. Select **Ame** once in **System Settings -> Screen Saver**.
+1. Select **Ametrix** once in **System Settings -> Screen Saver**.
 2. In **System Settings -> Lock Screen**, set password requirement to
    immediately after the screen saver begins.
-3. In **Karabiner-Elements -> Complex Modifications -> Add predefined rule**,
-   enable **Ame -> Ctrl-Command-Q starts Ame screen saver**.
 
-Now press `Ctrl-Cmd-Q`.
-
-If you do not use Karabiner:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_KARABINER=0 bash
-```
-
-If you want a menu bar controller for toggling the live wallpaper and starting
-the lock screen:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_MENUBAR=1 bash
-```
-
-If you want Ame to run as a live wallpaper at login without the menu bar:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_WALLPAPER=1 bash
-```
+For an optional keyboard lock shortcut, install the Karabiner rule with
+`scripts/install-karabiner-lock.sh`, then enable
+**Ametrix -> Ctrl-Command-Q starts Ametrix screen saver** in Karabiner-Elements.
 
 If you already cloned the repo:
 
@@ -94,45 +69,45 @@ To build a local drag-and-drop app bundle:
 scripts/package-app.sh
 ```
 
-This creates `dist/Ame.app`. The app runs as a menu bar controller and includes
-`Ame.saver` plus the default config template in its bundle resources.
+This creates `dist/Ametrix.app`. The app runs as a menu bar controller and includes
+`Ametrix.saver` plus the default config template in its bundle resources.
 
 ## Usage
 
 Start the selected macOS screen saver:
 
 ```bash
-ame
+ametrix
 ```
 
-Run Ame directly as an overlay:
+Run Ametrix directly as an overlay:
 
 ```bash
-ame --overlay
+ametrix --overlay
 ```
 
-Run Ame as a desktop-level live wallpaper:
+Run Ametrix as a desktop-level live wallpaper:
 
 ```bash
-ame --wallpaper
+ametrix --wallpaper
 ```
 
-Run Ame as a menu bar controller:
+Run Ametrix as a menu bar controller:
 
 ```bash
-ame --menubar
+ametrix --menubar
 ```
 
 Start menu bar mode with wallpaper already enabled:
 
 ```bash
-ame --menubar --wallpaper
+ametrix --menubar --wallpaper
 ```
 
 Inspect the resolved config:
 
 ```bash
-ame --print-config
+ametrix --print-config
 ```
 
 Screen saver mode is controlled by macOS. Wake, unlock, password, Touch ID, and Apple Watch unlock behavior are handled by the system.
@@ -143,9 +118,9 @@ Wallpaper mode runs behind normal desktop windows, joins all Spaces, and ignores
 mouse events. It is a normal app window, not a native item in macOS Wallpaper
 settings.
 
-Menu bar mode adds an Ame icon to the macOS menu bar. Use it to start or stop
+Menu bar mode adds an Ametrix icon to the macOS menu bar. Use it to start or stop
 the live wallpaper, start the selected macOS screen saver for lock-screen use,
-install the bundled screen saver, or quit Ame. Wallpaper state is remembered
+install the bundled screen saver, or quit Ametrix. Wallpaper state is remembered
 across menu bar launches.
 
 Install menu bar mode as a login item:
@@ -160,34 +135,16 @@ Remove the menu bar login item:
 scripts/install-menubar-agent.sh --uninstall
 ```
 
-Install wallpaper mode as a login item:
-
-```bash
-scripts/install-wallpaper-agent.sh
-```
-
-Remove the login item:
-
-```bash
-scripts/install-wallpaper-agent.sh --uninstall
-```
-
 Install everything and enable menu bar mode immediately:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_MENUBAR=1 bash
-```
-
-Install everything and enable wallpaper mode immediately without the menu bar:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/YaphetSf/ame/main/scripts/bootstrap.sh | AME_INSTALL_WALLPAPER=1 bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/ametrix/main/scripts/bootstrap.sh | AMETRIX_INSTALL_MENUBAR=1 bash
 ```
 
 ## Lock Shortcut
 
-Ame does not try to draw over the macOS lock screen. That boundary is owned by
-macOS. Instead, the Karabiner rule remaps `Ctrl-Cmd-Q` to start the Ame screen
+Ametrix does not try to draw over the macOS lock screen. That boundary is owned by
+macOS. Instead, the Karabiner rule remaps `Ctrl-Cmd-Q` to start the Ametrix screen
 saver. With macOS configured to require a password immediately after the screen
 saver starts, the result behaves like a lock shortcut while keeping the system
 authentication flow intact.
@@ -201,7 +158,7 @@ scripts/install-karabiner-lock.sh
 Karabiner command output is written to:
 
 ```bash
-/tmp/ame-karabiner.log
+/tmp/ametrix-karabiner.log
 ```
 
 ## Raycast
@@ -209,7 +166,7 @@ Karabiner command output is written to:
 A Raycast Script Command is included at:
 
 ```bash
-scripts/raycast-ame.sh
+scripts/raycast-ametrix.sh
 ```
 
 ## Configuration
@@ -217,7 +174,7 @@ scripts/raycast-ame.sh
 Edit the canonical TOML config:
 
 ```bash
-~/Library/Application Support/Ame/config.toml
+~/Library/Application Support/Ametrix/config.toml
 ```
 
 Create it manually when needed:
@@ -273,7 +230,7 @@ Supported fields:
 
 Preset colors are applied first. Explicit color fields override preset colors.
 
-`~/.config/ame/config.toml` is still read as a fallback for older installs. The older `config.json` format is only used when no TOML config exists.
+`~/.config/ametrix/config.toml` is still read as a fallback for older installs. The older `config.json` format is only used when no TOML config exists.
 
 ## Screen Saver Container
 
@@ -283,7 +240,7 @@ Modern macOS runs `.saver` bundles inside:
 ~/Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data
 ```
 
-That container has its own home directory, so a screen saver process cannot reliably read the normal user config path. `ame` and `scripts/install.sh` sync the canonical TOML config into the container before starting the screen saver.
+That container has its own home directory, so a screen saver process cannot reliably read the normal user config path. `ametrix` and `scripts/install.sh` sync the canonical TOML config into the container before starting the screen saver.
 
 ## Development
 
@@ -305,6 +262,31 @@ Build a local `.app` bundle:
 scripts/package-app.sh
 ```
 
+Build, sign, notarize, and package a release DMG:
+
+```bash
+AMETRIX_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+AMETRIX_NOTARY_PROFILE="ametrix-notary" \
+scripts/sign-notarize-dmg.sh
+```
+
+Create the notarytool keychain profile once:
+
+```bash
+xcrun notarytool store-credentials ametrix-notary \
+  --apple-id "you@example.com" \
+  --team-id "TEAMID" \
+  --password "app-specific-password"
+```
+
+For a signed-only local DMG without notarization:
+
+```bash
+AMETRIX_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+AMETRIX_SKIP_NOTARIZE=1 \
+scripts/sign-notarize-dmg.sh
+```
+
 Test the remote bootstrap installer locally:
 
 ```bash
@@ -321,36 +303,38 @@ Useful environment variables:
 
 | Variable | Purpose |
 |---|---|
-| `AME_BIN_DEST` | Override CLI install path |
-| `AME_CONFIG_DIR` | Override canonical config directory |
-| `AME_INSTALL_DIR` | Override where `scripts/bootstrap.sh` clones the repo |
-| `AME_SAVER_DEST_DIR` | Override `.saver` install directory |
-| `AME_INSTALL_KARABINER=0` | Skip installing the Karabiner complex modification |
-| `AME_INSTALL_MENUBAR=1` | Install and start menu bar mode as a LaunchAgent |
-| `AME_INSTALL_WALLPAPER=1` | Install and start wallpaper mode as a LaunchAgent |
-| `AME_REPO_URL` | Override the git URL used by `scripts/bootstrap.sh` |
-| `AME_OPEN_SETTINGS=0` | Skip opening System Settings after saver install |
+| `AMETRIX_BIN_DEST` | Override CLI install path |
+| `AMETRIX_CONFIG_DIR` | Override canonical config directory |
+| `AMETRIX_INSTALL_DIR` | Override where `scripts/bootstrap.sh` clones the repo |
+| `AMETRIX_SAVER_DEST_DIR` | Override `.saver` install directory |
+| `AMETRIX_INSTALL_KARABINER=0` | Skip installing the Karabiner complex modification |
+| `AMETRIX_INSTALL_MENUBAR=1` | Install and start menu bar mode as a LaunchAgent |
+| `AMETRIX_SIGN_IDENTITY` | Developer ID Application identity for DMG signing |
+| `AMETRIX_NOTARY_PROFILE` | `notarytool` keychain profile for notarization |
+| `AMETRIX_SKIP_NOTARIZE=1` | Build a signed local DMG without Apple notarization |
+| `AMETRIX_REPO_URL` | Override the git URL used by `scripts/bootstrap.sh` |
+| `AMETRIX_OPEN_SETTINGS=0` | Skip opening System Settings after saver install |
 | `DEVELOPER_DIR` | Select a specific Xcode toolchain; otherwise `/Applications/Xcode.app` is used when present |
 
 ## Architecture
 
 ```text
-Sources/ame/main.swift
+Sources/ametrix/main.swift
   CLI entry point, overlay app lifecycle, menu bar controller, screen saver launch
 
-Sources/ame/AmeConfiguration.swift
+Sources/ametrix/AmetrixConfiguration.swift
   TOML/JSON config loading, presets, screen saver container paths
 
-Sources/ame/MatrixRainView.swift
+Sources/ametrix/MatrixRainView.swift
   Native CoreText renderer
 
-Sources/AmeScreenSaver/AmeScreenSaverView.swift
+Sources/AmetrixScreenSaver/AmetrixScreenSaverView.swift
   ScreenSaverView wrapper around MatrixRainView
 ```
 
 ## Privacy
 
-Ame does not collect telemetry, call network services, or shell out to third-party animation tools. It reads local configuration files and writes the installed CLI and screen saver bundle during installation.
+Ametrix does not collect telemetry, call network services, or shell out to third-party animation tools. It reads local configuration files and writes the installed CLI and screen saver bundle during installation.
 
 ## License
 

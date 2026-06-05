@@ -112,7 +112,7 @@ private final class OverlaySessionManager {
         }
 
         closeSessions()
-        let configuration = AmeConfiguration.load()
+        let configuration = AmetrixConfiguration.load()
 
         sessions = NSScreen.screens.map {
             OverlaySession(screen: $0, configuration: configuration, mode: mode)
@@ -134,7 +134,7 @@ private final class OverlaySession {
     let window: OverlayWindow
     let rainView: MatrixRainView
 
-    init(screen: NSScreen, configuration: AmeConfiguration, mode: OverlayMode) {
+    init(screen: NSScreen, configuration: AmetrixConfiguration, mode: OverlayMode) {
         let window = OverlayWindow(
             contentRect: screen.frame,
             styleMask: .borderless,
@@ -270,7 +270,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 
 private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private enum DefaultsKey {
-        static let wallpaperEnabled = "AmeMenuBarWallpaperEnabled"
+        static let wallpaperEnabled = "AmetrixMenuBarWallpaperEnabled"
     }
 
     private let wallpaperManager = OverlaySessionManager(mode: .wallpaper)
@@ -308,15 +308,15 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private func installStatusItem() {
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            if let image = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: "Ame") {
+            if let image = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: "Ametrix") {
                 image.isTemplate = true
                 button.image = image
             } else {
-                button.title = "Ame"
+                button.title = "Ametrix"
             }
         }
 
-        let menu = NSMenu(title: "Ame")
+        let menu = NSMenu(title: "Ametrix")
 
         if bundledScreenSaverURL() != nil {
             let installScreenSaverItem = NSMenuItem(
@@ -349,7 +349,7 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
 
         let quitItem = NSMenuItem(
-            title: "Quit Ame",
+            title: "Quit Ametrix",
             action: #selector(quit),
             keyEquivalent: "q"
         )
@@ -376,12 +376,12 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
             try installBundledScreenSaver()
             updateMenu()
             showMessage(
-                title: "Ame screen saver installed.",
-                message: "Select Ame once in System Settings > Screen Saver, then set Lock Screen to require a password immediately after the screen saver begins."
+                title: "Ametrix screen saver installed.",
+                message: "Select Ametrix once in System Settings > Screen Saver, then set Lock Screen to require a password immediately after the screen saver begins."
             )
         } catch {
             showMessage(
-                title: "Ame could not install the screen saver.",
+                title: "Ametrix could not install the screen saver.",
                 message: "\(error)"
             )
         }
@@ -419,8 +419,8 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
 
     private func showScreenSaverError() {
         showMessage(
-            title: "Ame could not start the lock screen.",
-            message: "Install Ame.saver, then select Ame once in System Settings > Screen Saver."
+            title: "Ametrix could not start the lock screen.",
+            message: "Install Ametrix.saver, then select Ametrix once in System Settings > Screen Saver."
         )
     }
 
@@ -477,16 +477,16 @@ private func printUsage() {
     print(
         """
         Usage:
-          ame                Start the currently selected macOS screen saver
-          ame --overlay      Run Ame's direct full-screen overlay
-          ame --wallpaper    Run Ame as a desktop-level live wallpaper
-          ame --menubar      Run Ame as a menu bar controller
-          ame --menubar --wallpaper
+          ametrix                Start the currently selected macOS screen saver
+          ametrix --overlay      Run Ametrix's direct full-screen overlay
+          ametrix --wallpaper    Run Ametrix as a desktop-level live wallpaper
+          ametrix --menubar      Run Ametrix as a menu bar controller
+          ametrix --menubar --wallpaper
                              Run menu bar mode and start wallpaper immediately
-          ame --print-config Print the resolved config source
-          ame --help         Show this help
+          ametrix --print-config Print the resolved config source
+          ametrix --help         Show this help
 
-        Install Ame.saver with scripts/install-screensaver.sh, then select Ame
+        Install Ametrix.saver with scripts/install-screensaver.sh, then select Ametrix
         once in System Settings > Screen Saver. macOS handles unlock/password.
         """
     )
@@ -502,8 +502,8 @@ private func installedScreenSaverExists() -> Bool {
     let fileManager = FileManager.default
     let home = fileManager.homeDirectoryForCurrentUser.path
     let candidates = [
-        "\(home)/Library/Screen Savers/Ame.saver",
-        "/Library/Screen Savers/Ame.saver"
+        "\(home)/Library/Screen Savers/Ametrix.saver",
+        "/Library/Screen Savers/Ametrix.saver"
     ]
 
     return candidates.contains {
@@ -512,16 +512,16 @@ private func installedScreenSaverExists() -> Bool {
 }
 
 private func bundledScreenSaverURL() -> URL? {
-    Bundle.main.url(forResource: "Ame", withExtension: "saver")
+    Bundle.main.url(forResource: "Ametrix", withExtension: "saver")
 }
 
 private func installBundledScreenSaver() throws {
     guard let bundledScreenSaverURL = bundledScreenSaverURL() else {
         throw NSError(
-            domain: "Ame",
+            domain: "Ametrix",
             code: 1,
             userInfo: [
-                NSLocalizedDescriptionKey: "Ame.saver was not found inside this app bundle."
+                NSLocalizedDescriptionKey: "Ametrix.saver was not found inside this app bundle."
             ]
         )
     }
@@ -531,7 +531,7 @@ private func installBundledScreenSaver() throws {
         .appendingPathComponent("Library", isDirectory: true)
         .appendingPathComponent("Screen Savers", isDirectory: true)
     let destinationURL = destinationDirectory
-        .appendingPathComponent("Ame.saver", isDirectory: true)
+        .appendingPathComponent("Ametrix.saver", isDirectory: true)
 
     try fileManager.createDirectory(
         at: destinationDirectory,
@@ -552,7 +552,7 @@ private func installBundledConfigurationIfNeeded() throws {
     let configurationDirectory = fileManager.homeDirectoryForCurrentUser
         .appendingPathComponent("Library", isDirectory: true)
         .appendingPathComponent("Application Support", isDirectory: true)
-        .appendingPathComponent("Ame", isDirectory: true)
+        .appendingPathComponent("Ametrix", isDirectory: true)
     let configurationURL = configurationDirectory
         .appendingPathComponent("config.toml", isDirectory: false)
 
@@ -562,7 +562,7 @@ private func installBundledConfigurationIfNeeded() throws {
 
     guard let bundledConfigurationURL = Bundle.main.url(forResource: "config.example", withExtension: "toml") else {
         throw NSError(
-            domain: "Ame",
+            domain: "Ametrix",
             code: 2,
             userInfo: [
                 NSLocalizedDescriptionKey: "config.example.toml was not found inside this app bundle."
@@ -591,9 +591,9 @@ private func terminateScreenSaverHelpers() {
 }
 
 private func syncScreenSaverContainerConfiguration() {
-    let result = AmeConfiguration.loadWithSource()
+    let result = AmetrixConfiguration.loadWithSource()
     guard let sourceURL = result.sourceURL,
-          let destinationURL = AmeConfiguration.screenSaverContainerConfigurationURL(),
+          let destinationURL = AmetrixConfiguration.screenSaverContainerConfigurationURL(),
           sourceURL.standardizedFileURL.path != destinationURL.standardizedFileURL.path else {
         return
     }
@@ -612,7 +612,7 @@ private func syncScreenSaverContainerConfiguration() {
 
         try fileManager.copyItem(at: sourceURL, to: destinationURL)
     } catch {
-        writeError("ame: warning: failed to sync screen saver config: \(error)\n")
+        writeError("ametrix: warning: failed to sync screen saver config: \(error)\n")
     }
 }
 
@@ -620,8 +620,8 @@ private func startSystemScreenSaver() -> Int32 {
     guard installedScreenSaverExists() else {
         writeError(
             """
-            ame: Ame.saver is not installed.
-            Run scripts/install-screensaver.sh, then select Ame in System Settings > Screen Saver.
+            ametrix: Ametrix.saver is not installed.
+            Run scripts/install-screensaver.sh, then select Ametrix in System Settings > Screen Saver.
             """
         )
         return 1
@@ -639,7 +639,7 @@ private func startSystemScreenSaver() -> Int32 {
         process.waitUntilExit()
         return process.terminationStatus
     } catch {
-        writeError("ame: failed to start ScreenSaverEngine: \(error)\n")
+        writeError("ametrix: failed to start ScreenSaverEngine: \(error)\n")
         return 1
     }
 }
@@ -666,7 +666,7 @@ private func runMenuBar(startWallpaper: Bool) {
 }
 
 private func printConfig() {
-    let result = AmeConfiguration.loadWithSource()
+    let result = AmetrixConfiguration.loadWithSource()
     let configuration = result.configuration
 
     print("Config source: \(result.sourceURL?.path ?? "defaults")")
@@ -674,9 +674,9 @@ private func printConfig() {
     print("Density: \(configuration.density)")
     print("Frame rate: \(configuration.frameRate)")
     print("Font: \(configuration.fontName) \(Int(configuration.fontSize))pt")
-    print("Background: \(configuration.backgroundColor.ameHexString)")
-    print("Head: \(configuration.headColor.ameHexString)")
-    print("Tail: \(configuration.tailColor.ameHexString)")
+    print("Background: \(configuration.backgroundColor.ametrixHexString)")
+    print("Head: \(configuration.headColor.ametrixHexString)")
+    print("Tail: \(configuration.tailColor.ametrixHexString)")
     print("Searched:")
     result.searchedURLs.forEach {
         print("  \($0.path)")
@@ -684,7 +684,7 @@ private func printConfig() {
 }
 
 guard let mode = parseMode(arguments: CommandLine.arguments) else {
-    writeError("ame: unknown arguments. Run `ame --help`.\n")
+    writeError("ametrix: unknown arguments. Run `ametrix --help`.\n")
     exit(64)
 }
 

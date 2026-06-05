@@ -1,8 +1,8 @@
 import AppKit
 import ScreenSaver
 
-@objc(AmeScreenSaverView)
-final class AmeScreenSaverView: ScreenSaverView {
+@objc(AmetrixScreenSaverView)
+final class AmetrixScreenSaverView: ScreenSaverView {
     private var rainView: MatrixRainView?
 
     override init?(frame: NSRect, isPreview: Bool) {
