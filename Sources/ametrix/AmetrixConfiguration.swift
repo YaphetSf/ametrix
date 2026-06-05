@@ -177,6 +177,50 @@ struct AmetrixConfiguration {
     }
 }
 
+extension AmetrixConfiguration {
+    static let presetNames = ["classic", "amber", "cyan", "white", "violet"]
+
+    /// Returns a copy with the named preset's colours applied.
+    /// Unknown names leave the configuration unchanged.
+    func applyingPreset(_ name: String) -> AmetrixConfiguration {
+        var copy = self
+        copy.applyPreset(name)
+        return copy
+    }
+
+    /// Serialises the configuration to the TOML format Ametrix reads back.
+    func tomlString() -> String {
+        func number(_ value: Double) -> String {
+            String(format: "%g", value)
+        }
+
+        return """
+        frameRate = \(Int(frameRate.rounded()))
+        preset = "\(preset)"
+        density = \(number(density))
+
+        fontName = "\(fontName)"
+        fontSize = \(Int(fontSize.rounded()))
+
+        backgroundColor = "\(backgroundColor.ametrixHexString)"
+        headColor = "\(headColor.ametrixHexString)"
+        tailColor = "\(tailColor.ametrixHexString)"
+
+        minimumTailAlpha = \(number(Double(minimumTailAlpha)))
+        characters = "\(characters)"
+
+        [speed]
+        min = \(number(speed.min))
+        max = \(number(speed.max))
+
+        [trail]
+        min = \(trail.min)
+        max = \(trail.max)
+        rowMultiplier = \(number(trail.rowMultiplier))
+        """
+    }
+}
+
 private struct RawConfiguration: Decodable {
     struct RawSpeedRange: Decodable {
         var min: Double?
@@ -434,7 +478,7 @@ private extension String {
 
 extension NSColor {
     var ametrixHexString: String {
-        let color = usingColorSpace(.deviceRGB) ?? self
+        let color = usingColorSpace(.sRGB) ?? self
         let red = Int((color.redComponent * 255).rounded())
         let green = Int((color.greenComponent * 255).rounded())
         let blue = Int((color.blueComponent * 255).rounded())
@@ -459,6 +503,6 @@ extension NSColor {
         let red = CGFloat((integer >> 16) & 0xff) / 255.0
         let green = CGFloat((integer >> 8) & 0xff) / 255.0
         let blue = CGFloat(integer & 0xff) / 255.0
-        self.init(calibratedRed: red, green: green, blue: blue, alpha: 1.0)
+        self.init(srgbRed: red, green: green, blue: blue, alpha: 1.0)
     }
 }

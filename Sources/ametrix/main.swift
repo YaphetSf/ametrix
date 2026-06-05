@@ -6,6 +6,7 @@ private enum CommandLineMode {
     case overlay
     case wallpaper
     case menuBar(startWallpaper: Bool)
+    case preferences
     case printConfig
     case help
 }
@@ -77,6 +78,15 @@ private final class OverlaySessionManager {
         }
 
         closeSessions()
+    }
+
+    /// Rebuilds running sessions so they pick up the latest configuration on disk.
+    func reload() {
+        guard isRunning else {
+            return
+        }
+
+        rebuildSessions()
     }
 
     private func installScreenObserver() {
@@ -279,6 +289,7 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private var menu: NSMenu?
     private var installScreenSaverItem: NSMenuItem?
     private var wallpaperItem: NSMenuItem?
+    private var settingsWindowController: SettingsWindowController?
 
     init(startWallpaper: Bool) {
         self.startWallpaper = startWallpaper
@@ -421,13 +432,32 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openPreferences() {
+        if settingsWindowController == nil {
+            settingsWindowController = SettingsWindowController(
+                onConfigurationChange: { [weak self] configuration in
+                    self?.applyConfiguration(configuration)
+                },
+                onOpenConfigFile: { [weak self] in
+                    self?.openConfigFileInEditor()
+                }
+            )
+        }
+
+        settingsWindowController?.show()
+    }
+
+    /// Persists a configuration edited in the preferences window and live-refreshes the wallpaper.
+    private func applyConfiguration(_ configuration: AmetrixConfiguration) {
+        persistConfiguration(configuration)
+        wallpaperManager.reload()
+    }
+
+    private func openConfigFileInEditor() {
         do {
-            let configurationURL = try ensureConfigurationFileExists()
-            syncScreenSaverContainerConfiguration()
-            NSWorkspace.shared.open(configurationURL)
+            try openConfigurationFileInEditor()
         } catch {
             showMessage(
-                title: "Ametrix could not open preferences.",
+                title: "Ametrix could not open the config file.",
                 message: "\(error)"
             )
         }
@@ -457,6 +487,29 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+private final class PreferencesAppDelegate: NSObject, NSApplicationDelegate {
+    private var settingsWindowController: SettingsWindowController?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.regular)
+
+        let controller = SettingsWindowController(
+            onConfigurationChange: { configuration in
+                persistConfiguration(configuration)
+            },
+            onOpenConfigFile: {
+                try? openConfigurationFileInEditor()
+            }
+        )
+        settingsWindowController = controller
+        controller.show()
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        true
+    }
+}
+
 private func parseMode(arguments: [String]) -> CommandLineMode? {
     let args = Array(arguments.dropFirst())
     if args.isEmpty {
@@ -477,6 +530,10 @@ private func parseMode(arguments: [String]) -> CommandLineMode? {
 
     if args == ["--menubar", "--wallpaper"] || args == ["--menu-bar", "--wallpaper"] {
         return .menuBar(startWallpaper: true)
+    }
+
+    if args == ["--preferences"] || args == ["--settings"] {
+        return .preferences
     }
 
     if args == ["--print-config"] {
@@ -504,6 +561,7 @@ private func printUsage() {
           ametrix --menubar      Run Ametrix as a menu bar controller
           ametrix --menubar --wallpaper
                              Run menu bar mode and start wallpaper immediately
+          ametrix --preferences  Open the Ametrix preferences window
           ametrix --print-config Print the resolved config source
           ametrix --help         Show this help
 
@@ -621,35 +679,34 @@ private func writeDefaultConfiguration(to configurationURL: URL) throws {
         at: configurationURL.deletingLastPathComponent(),
         withIntermediateDirectories: true
     )
-    try defaultConfigurationToml().write(to: configurationURL, atomically: true, encoding: .utf8)
+    try AmetrixConfiguration.default.tomlString().write(to: configurationURL, atomically: true, encoding: .utf8)
 }
 
-private func defaultConfigurationToml() -> String {
-    let configuration = AmetrixConfiguration.default
-    return """
-    frameRate = \(Int(configuration.frameRate))
-    preset = "\(configuration.preset)"
-    density = \(configuration.density)
+/// Writes a configuration back to the active config file and mirrors it into the
+/// screen saver container. Shared by the menu bar and standalone preferences flows.
+@discardableResult
+private func persistConfiguration(_ configuration: AmetrixConfiguration) -> Bool {
+    let target = AmetrixConfiguration.loadWithSource().sourceURL
+        ?? AmetrixConfiguration.tomlConfigurationURL()
 
-    fontName = "\(configuration.fontName)"
-    fontSize = \(Int(configuration.fontSize))
+    do {
+        try FileManager.default.createDirectory(
+            at: target.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try configuration.tomlString().write(to: target, atomically: true, encoding: .utf8)
+        syncScreenSaverContainerConfiguration()
+        return true
+    } catch {
+        writeError("ametrix: failed to save preferences: \(error)\n")
+        return false
+    }
+}
 
-    backgroundColor = "\(configuration.backgroundColor.ametrixHexString)"
-    headColor = "\(configuration.headColor.ametrixHexString)"
-    tailColor = "\(configuration.tailColor.ametrixHexString)"
-
-    minimumTailAlpha = \(configuration.minimumTailAlpha)
-    characters = "\(configuration.characters)"
-
-    [speed]
-    min = \(configuration.speed.min)
-    max = \(configuration.speed.max)
-
-    [trail]
-    min = \(configuration.trail.min)
-    max = \(configuration.trail.max)
-    rowMultiplier = \(configuration.trail.rowMultiplier)
-    """
+private func openConfigurationFileInEditor() throws {
+    let configurationURL = try ensureConfigurationFileExists()
+    syncScreenSaverContainerConfiguration()
+    NSWorkspace.shared.open(configurationURL)
 }
 
 private func terminateScreenSaverHelpers() {
@@ -740,6 +797,17 @@ private func runMenuBar(startWallpaper: Bool) {
     app.run()
 }
 
+private var preferencesDelegate: PreferencesAppDelegate?
+
+private func runPreferences() {
+    let app = NSApplication.shared
+    let delegate = PreferencesAppDelegate()
+    preferencesDelegate = delegate
+    app.delegate = delegate
+    app.setActivationPolicy(.regular)
+    app.run()
+}
+
 private func printConfig() {
     let result = AmetrixConfiguration.loadWithSource()
     let configuration = result.configuration
@@ -772,6 +840,8 @@ case .wallpaper:
     runOverlay(mode: .wallpaper)
 case .menuBar(let startWallpaper):
     runMenuBar(startWallpaper: startWallpaper)
+case .preferences:
+    runPreferences()
 case .printConfig:
     printConfig()
 case .help:

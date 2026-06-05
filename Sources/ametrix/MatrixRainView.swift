@@ -11,11 +11,11 @@ final class MatrixRainView: NSView {
         var glyphOffset: Int
     }
 
-    private let configuration: AmetrixConfiguration
-    private let targetFrameInterval: TimeInterval
-    private let font: NSFont
-    private let ctFont: CTFont
-    private let glyphPalette: [CGGlyph]
+    private var configuration: AmetrixConfiguration
+    private var targetFrameInterval: TimeInterval
+    private var font: NSFont
+    private var ctFont: CTFont
+    private var glyphPalette: [CGGlyph]
     private var columns: [RainColumn] = []
     private var visibleColumnCount = 0
     private var columnCount = 0
@@ -71,6 +71,44 @@ final class MatrixRainView: NSView {
 
     deinit {
         stopAnimating()
+    }
+
+    /// Applies a new configuration in place, recomputing only the parts affected
+    /// by the change so live edits (especially colour drags) stay cheap.
+    func update(configuration newConfiguration: AmetrixConfiguration) {
+        let previous = configuration
+        configuration = newConfiguration
+        targetFrameInterval = 1.0 / newConfiguration.frameRate
+
+        let fontChanged = newConfiguration.fontName != previous.fontName
+            || newConfiguration.fontSize != previous.fontSize
+        if fontChanged {
+            let selectedFont = NSFont(name: newConfiguration.fontName, size: newConfiguration.fontSize)
+                ?? .monospacedSystemFont(ofSize: newConfiguration.fontSize, weight: .regular)
+            font = selectedFont
+            ctFont = selectedFont as CTFont
+        }
+
+        if fontChanged || newConfiguration.characters != previous.characters {
+            glyphPalette = MatrixRainView.makeGlyphPalette(
+                font: ctFont,
+                characters: newConfiguration.characters
+            )
+        }
+
+        layer?.backgroundColor = newConfiguration.backgroundColor.cgColor
+
+        if fontChanged || newConfiguration.density != previous.density {
+            calculateCellMetrics()
+            rebuildColumns()
+        }
+
+        if newConfiguration.frameRate != previous.frameRate, window != nil {
+            stopAnimating()
+            startAnimating()
+        }
+
+        needsDisplay = true
     }
 
     override func viewDidMoveToWindow() {

@@ -45,7 +45,9 @@ Launch Ametrix once from Applications. The menu bar icon lets you:
 - Install or reinstall the bundled `Ametrix.saver`
 - Start or stop the live wallpaper
 - Start the selected macOS screen saver for lock-screen use
-- Open the TOML preferences file
+- Open **Preferences…** (⌘,) to tune colors, density, motion, and glyphs with a
+  live preview — changes save to the TOML config and refresh a running wallpaper
+  immediately
 - Quit Ametrix
 
 After installing the screen saver from the menu:
@@ -103,6 +105,13 @@ Start menu bar mode with wallpaper already enabled:
 
 ```bash
 ametrix --menubar --wallpaper
+```
+
+Open the preferences window on its own (also available as the menu bar
+**Preferences…** item):
+
+```bash
+ametrix --preferences
 ```
 
 Inspect the resolved config:
