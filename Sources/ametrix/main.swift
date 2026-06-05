@@ -308,7 +308,7 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private func installStatusItem() {
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            if let image = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: "Ametrix") {
+            if let image = NSImage(systemSymbolName: "square.grid.3x3.fill", accessibilityDescription: "Ametrix") {
                 image.isTemplate = true
                 button.image = image
             } else {
@@ -345,6 +345,14 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         )
         lockScreenItem.target = self
         menu.addItem(lockScreenItem)
+
+        let preferencesItem = NSMenuItem(
+            title: "Preferences...",
+            action: #selector(openPreferences),
+            keyEquivalent: ","
+        )
+        preferencesItem.target = self
+        menu.addItem(preferencesItem)
 
         menu.addItem(.separator())
 
@@ -409,6 +417,19 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 self.showScreenSaverError()
             }
+        }
+    }
+
+    @objc private func openPreferences() {
+        do {
+            let configurationURL = try ensureConfigurationFileExists()
+            syncScreenSaverContainerConfiguration()
+            NSWorkspace.shared.open(configurationURL)
+        } catch {
+            showMessage(
+                title: "Ametrix could not open preferences.",
+                message: "\(error)"
+            )
         }
     }
 
@@ -486,7 +507,7 @@ private func printUsage() {
           ametrix --print-config Print the resolved config source
           ametrix --help         Show this help
 
-        Install Ametrix.saver with scripts/install-screensaver.sh, then select Ametrix
+        Install Ametrix.saver with scripts/install/screensaver.sh, then select Ametrix
         once in System Settings > Screen Saver. macOS handles unlock/password.
         """
     )
@@ -577,6 +598,60 @@ private func installBundledConfigurationIfNeeded() throws {
     try fileManager.copyItem(at: bundledConfigurationURL, to: configurationURL)
 }
 
+private func ensureConfigurationFileExists() throws -> URL {
+    let fileManager = FileManager.default
+
+    for configurationURL in AmetrixConfiguration.tomlConfigurationURLs() where fileManager.fileExists(atPath: configurationURL.path) {
+        return configurationURL
+    }
+
+    let configurationURL = AmetrixConfiguration.tomlConfigurationURL()
+    if Bundle.main.url(forResource: "config.example", withExtension: "toml") != nil {
+        try installBundledConfigurationIfNeeded()
+    } else {
+        try writeDefaultConfiguration(to: configurationURL)
+    }
+
+    return configurationURL
+}
+
+private func writeDefaultConfiguration(to configurationURL: URL) throws {
+    let fileManager = FileManager.default
+    try fileManager.createDirectory(
+        at: configurationURL.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
+    try defaultConfigurationToml().write(to: configurationURL, atomically: true, encoding: .utf8)
+}
+
+private func defaultConfigurationToml() -> String {
+    let configuration = AmetrixConfiguration.default
+    return """
+    frameRate = \(Int(configuration.frameRate))
+    preset = "\(configuration.preset)"
+    density = \(configuration.density)
+
+    fontName = "\(configuration.fontName)"
+    fontSize = \(Int(configuration.fontSize))
+
+    backgroundColor = "\(configuration.backgroundColor.ametrixHexString)"
+    headColor = "\(configuration.headColor.ametrixHexString)"
+    tailColor = "\(configuration.tailColor.ametrixHexString)"
+
+    minimumTailAlpha = \(configuration.minimumTailAlpha)
+    characters = "\(configuration.characters)"
+
+    [speed]
+    min = \(configuration.speed.min)
+    max = \(configuration.speed.max)
+
+    [trail]
+    min = \(configuration.trail.min)
+    max = \(configuration.trail.max)
+    rowMultiplier = \(configuration.trail.rowMultiplier)
+    """
+}
+
 private func terminateScreenSaverHelpers() {
     for processName in ["legacyScreenSaver", "ScreenSaverEngine"] {
         let process = Process()
@@ -621,7 +696,7 @@ private func startSystemScreenSaver() -> Int32 {
         writeError(
             """
             ametrix: Ametrix.saver is not installed.
-            Run scripts/install-screensaver.sh, then select Ametrix in System Settings > Screen Saver.
+            Run scripts/install/screensaver.sh, then select Ametrix in System Settings > Screen Saver.
             """
         )
         return 1

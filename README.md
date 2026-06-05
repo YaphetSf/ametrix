@@ -45,6 +45,7 @@ Launch Ametrix once from Applications. The menu bar icon lets you:
 - Install or reinstall the bundled `Ametrix.saver`
 - Start or stop the live wallpaper
 - Start the selected macOS screen saver for lock-screen use
+- Open the TOML preferences file
 - Quit Ametrix
 
 After installing the screen saver from the menu:
