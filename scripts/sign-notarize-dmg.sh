@@ -14,6 +14,7 @@ APPLE_PASSWORD="${APPLE_PASSWORD:-}"
 APPLE_TEAM_ID="${APPLE_TEAM_ID:-}"
 SKIP_PACKAGE="${AMETRIX_SKIP_PACKAGE:-0}"
 SKIP_NOTARIZE="${AMETRIX_SKIP_NOTARIZE:-0}"
+WAIT_FOR_NOTARY="${AMETRIX_NOTARY_WAIT:-1}"
 
 if [[ -z "$SIGN_IDENTITY" ]]; then
   echo "Error: AMETRIX_SIGN_IDENTITY is required."
@@ -92,20 +93,38 @@ fi
 
 echo "Submitting DMG for notarization..."
 if [[ -n "$NOTARY_PROFILE" ]]; then
-  xcrun notarytool submit "$DMG_PATH" \
-    --keychain-profile "$NOTARY_PROFILE" \
-    --wait
+  if [[ "$WAIT_FOR_NOTARY" == "1" ]]; then
+    xcrun notarytool submit "$DMG_PATH" \
+      --keychain-profile "$NOTARY_PROFILE" \
+      --wait
+  else
+    xcrun notarytool submit "$DMG_PATH" \
+      --keychain-profile "$NOTARY_PROFILE"
+  fi
 elif [[ -n "$APPLE_ID" && -n "$APPLE_PASSWORD" && -n "$APPLE_TEAM_ID" ]]; then
-  xcrun notarytool submit "$DMG_PATH" \
-    --apple-id "$APPLE_ID" \
-    --password "$APPLE_PASSWORD" \
-    --team-id "$APPLE_TEAM_ID" \
-    --wait
+  if [[ "$WAIT_FOR_NOTARY" == "1" ]]; then
+    xcrun notarytool submit "$DMG_PATH" \
+      --apple-id "$APPLE_ID" \
+      --password "$APPLE_PASSWORD" \
+      --team-id "$APPLE_TEAM_ID" \
+      --wait
+  else
+    xcrun notarytool submit "$DMG_PATH" \
+      --apple-id "$APPLE_ID" \
+      --password "$APPLE_PASSWORD" \
+      --team-id "$APPLE_TEAM_ID"
+  fi
 else
   echo "Error: notarization credentials are missing."
   echo "Set AMETRIX_NOTARY_PROFILE, or set APPLE_ID, APPLE_PASSWORD, and APPLE_TEAM_ID."
   echo "For a signed-only local build, rerun with AMETRIX_SKIP_NOTARIZE=1."
   exit 1
+fi
+
+if [[ "$WAIT_FOR_NOTARY" != "1" ]]; then
+  echo "Notarization submitted without waiting."
+  echo "Check and staple later with: scripts/check-notarization.sh SUBMISSION_ID"
+  exit 0
 fi
 
 echo "Stapling notarization ticket..."

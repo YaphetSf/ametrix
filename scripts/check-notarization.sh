@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DMG_PATH="${AMETRIX_DMG_PATH:-$ROOT_DIR/dist/Ametrix.dmg}"
-NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-ametrix-notary}"
+NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-ame-notary}"
 SUBMISSION_ID="${1:-${AMETRIX_NOTARY_SUBMISSION_ID:-}}"
 
 if [[ -z "$SUBMISSION_ID" ]]; then
