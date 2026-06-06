@@ -10,13 +10,17 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let onConfigurationChange: (AmetrixConfiguration) -> Void
     /// Opens the raw config.toml in the user's editor.
     private let onOpenConfigFile: () -> Void
+    /// Screen saver / wallpaper controls shown at the bottom (menu bar mode only).
+    private let setupActions: SettingsSetupActions?
 
     init(
         onConfigurationChange: @escaping (AmetrixConfiguration) -> Void,
-        onOpenConfigFile: @escaping () -> Void
+        onOpenConfigFile: @escaping () -> Void,
+        setupActions: SettingsSetupActions? = nil
     ) {
         self.onConfigurationChange = onConfigurationChange
         self.onOpenConfigFile = onOpenConfigFile
+        self.setupActions = setupActions
     }
 
     func show() {
@@ -37,9 +41,11 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             self?.onConfigurationChange(configuration)
         }
 
-        let rootView = SettingsView(store: store) { [weak self] in
-            self?.onOpenConfigFile()
-        }
+        let rootView = SettingsView(
+            store: store,
+            openConfigFile: { [weak self] in self?.onOpenConfigFile() },
+            setup: setupActions
+        )
 
         let window = NSWindow(contentViewController: NSHostingController(rootView: rootView))
         window.title = "Ametrix Preferences"

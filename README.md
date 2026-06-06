@@ -267,6 +267,16 @@ scripts/
   install/                  Install helpers used by install.sh
   release/                  Packaging, signing, notarization, and release helpers
   integrations/             Optional third-party launcher scripts
+  dev/                      Local development and testing helpers
+```
+
+Clean-slate test as a first-time user (resets prefs, installed saver, and config,
+then repackages and relaunches so the onboarding guide appears):
+
+```bash
+scripts/dev/retest.sh             # full reset, repackage, launch
+scripts/dev/retest.sh --keep      # keep installed saver + config, only reset prefs
+scripts/dev/retest.sh --no-build  # skip repackaging, reuse dist/Ametrix.app
 ```
 
 Build the CLI:

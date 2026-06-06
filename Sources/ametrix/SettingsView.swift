@@ -101,9 +101,23 @@ final class SettingsStore: ObservableObject {
     }
 }
 
+/// Optional setup controls surfaced at the bottom of the preferences window:
+/// reinstalling the screen saver and toggling the live wallpaper. Supplied only
+/// in menu bar mode, where a wallpaper manager exists.
+struct SettingsSetupActions {
+    let reinstallSaver: () -> Void
+    let saverInstalled: () -> Bool
+    let toggleWallpaper: () -> Void
+    let wallpaperRunning: () -> Bool
+}
+
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
     var openConfigFile: () -> Void
+    var setup: SettingsSetupActions?
+
+    @State private var saverInstalled = false
+    @State private var wallpaperRunning = false
 
     private let presetOptions = AmetrixConfiguration.presetNames + ["custom"]
 
@@ -149,6 +163,19 @@ struct SettingsView: View {
                     TextField("Characters", text: $store.characters, axis: .vertical)
                         .lineLimit(2...4)
                 }
+
+                if let setup {
+                    Section("Setup") {
+                        Button(saverInstalled ? "Reinstall Screen Saver" : "Install Screen Saver") {
+                            setup.reinstallSaver()
+                            saverInstalled = setup.saverInstalled()
+                        }
+                        Button(wallpaperRunning ? "Stop Wallpaper" : "Start Wallpaper") {
+                            setup.toggleWallpaper()
+                            wallpaperRunning = setup.wallpaperRunning()
+                        }
+                    }
+                }
             }
             .formStyle(.grouped)
 
@@ -162,6 +189,10 @@ struct SettingsView: View {
             .padding(12)
         }
         .frame(width: 460, height: 720)
+        .onAppear {
+            saverInstalled = setup?.saverInstalled() ?? false
+            wallpaperRunning = setup?.wallpaperRunning() ?? false
+        }
     }
 
     /// Selecting a named preset loads its colours; choosing "custom" just records the label.

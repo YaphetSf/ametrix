@@ -302,6 +302,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private enum DefaultsKey {
         static let wallpaperEnabled = "AmetrixMenuBarWallpaperEnabled"
+        static let onboardingCompleted = "AmetrixOnboardingCompleted"
     }
 
     private let wallpaperManager = OverlaySessionManager(mode: .wallpaper)
@@ -311,6 +312,7 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private var installScreenSaverItem: NSMenuItem?
     private var wallpaperItem: NSMenuItem?
     private var settingsWindowController: SettingsWindowController?
+    private var onboardingWindowController: OnboardingWindowController?
 
     init(startWallpaper: Bool) {
         self.startWallpaper = startWallpaper
@@ -326,6 +328,10 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         }
 
         updateMenu()
+
+        if !UserDefaults.standard.bool(forKey: DefaultsKey.onboardingCompleted) {
+            showOnboarding()
+        }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -380,6 +386,14 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         )
         preferencesItem.target = self
         menu.addItem(preferencesItem)
+
+        let setupGuideItem = NSMenuItem(
+            title: "Setup Guide...",
+            action: #selector(openSetupGuide),
+            keyEquivalent: ""
+        )
+        setupGuideItem.target = self
+        menu.addItem(setupGuideItem)
 
         menu.addItem(.separator())
 
@@ -455,11 +469,61 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
                 },
                 onOpenConfigFile: { [weak self] in
                     self?.openConfigFileInEditor()
-                }
+                },
+                setupActions: SettingsSetupActions(
+                    reinstallSaver: { [weak self] in _ = self?.installScreenSaverSilently() },
+                    saverInstalled: { installedScreenSaverExists() },
+                    toggleWallpaper: { [weak self] in self?.toggleWallpaper() },
+                    wallpaperRunning: { [weak self] in self?.wallpaperManager.isRunning ?? false }
+                )
             )
         }
 
         settingsWindowController?.show()
+    }
+
+    @objc private func openSetupGuide() {
+        showOnboarding()
+    }
+
+    /// Shows the first-run guide. Wires the step buttons to the existing saver
+    /// install + System Settings deep links, and records completion on dismiss.
+    private func showOnboarding() {
+        if onboardingWindowController == nil {
+            onboardingWindowController = OnboardingWindowController(
+                installSaver: { [weak self] in self?.installScreenSaverSilently() ?? false },
+                saverInstalled: { installedScreenSaverExists() },
+                // macOS 26 has no standalone Screen Saver pane; the screen saver
+                // picker lives behind the "Screen Saver…" button in Wallpaper.
+                openScreenSaverSettings: { openSystemSettingsPane("com.apple.Wallpaper-Settings.extension") },
+                openLockScreenSettings: { openSystemSettingsPane("com.apple.Lock-Screen-Settings.extension") },
+                onCompleted: { [weak self] in
+                    UserDefaults.standard.set(true, forKey: DefaultsKey.onboardingCompleted)
+                    self?.onboardingWindowController = nil
+                },
+                onProceed: { [weak self] in
+                    self?.openPreferences()
+                }
+            )
+        }
+
+        onboardingWindowController?.show()
+    }
+
+    /// Installs the bundled saver for the onboarding flow, surfacing failures as an
+    /// alert. Returns whether the install succeeded.
+    private func installScreenSaverSilently() -> Bool {
+        do {
+            try installBundledScreenSaver()
+            updateMenu()
+            return true
+        } catch {
+            showMessage(
+                title: "Ametrix could not install the screen saver.",
+                message: "\(error)"
+            )
+            return false
+        }
     }
 
     /// Persists a configuration edited in the preferences window and live-refreshes the wallpaper.
@@ -749,6 +813,12 @@ private func persistConfiguration(_ configuration: AmetrixConfiguration) -> Bool
         writeError("ametrix: failed to save preferences: \(error)\n")
         return false
     }
+}
+
+/// Opens a System Settings pane by its extension identifier (macOS 13+).
+private func openSystemSettingsPane(_ identifier: String) {
+    guard let url = URL(string: "x-apple.systempreferences:\(identifier)") else { return }
+    NSWorkspace.shared.open(url)
 }
 
 private func openConfigurationFileInEditor() throws {
