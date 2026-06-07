@@ -309,7 +309,6 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private let startWallpaper: Bool
     private var statusItem: NSStatusItem?
     private var menu: NSMenu?
-    private var installScreenSaverItem: NSMenuItem?
     private var wallpaperItem: NSMenuItem?
     private var settingsWindowController: SettingsWindowController?
     private var onboardingWindowController: OnboardingWindowController?
@@ -351,18 +350,6 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
 
         let menu = NSMenu(title: "Ametrix")
 
-        if bundledScreenSaverURL() != nil {
-            let installScreenSaverItem = NSMenuItem(
-                title: "Install Screen Saver",
-                action: #selector(installScreenSaver),
-                keyEquivalent: ""
-            )
-            installScreenSaverItem.target = self
-            menu.addItem(installScreenSaverItem)
-            menu.addItem(.separator())
-            self.installScreenSaverItem = installScreenSaverItem
-        }
-
         let wallpaperItem = NSMenuItem(
             title: "Start Wallpaper",
             action: #selector(toggleWallpaper),
@@ -371,31 +358,13 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         wallpaperItem.target = self
         menu.addItem(wallpaperItem)
 
-        let lockScreenItem = NSMenuItem(
-            title: "Lock Screen",
-            action: #selector(lockScreen),
-            keyEquivalent: ""
-        )
-        lockScreenItem.target = self
-        menu.addItem(lockScreenItem)
-
         let preferencesItem = NSMenuItem(
-            title: "Preferences...",
+            title: "Open Preferences...",
             action: #selector(openPreferences),
             keyEquivalent: ","
         )
         preferencesItem.target = self
         menu.addItem(preferencesItem)
-
-        let setupGuideItem = NSMenuItem(
-            title: "Setup Guide...",
-            action: #selector(openSetupGuide),
-            keyEquivalent: ""
-        )
-        setupGuideItem.target = self
-        menu.addItem(setupGuideItem)
-
-        menu.addItem(.separator())
 
         let quitItem = NSMenuItem(
             title: "Quit Ametrix",
@@ -413,27 +382,8 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
 
     private func updateMenu() {
         let wallpaperEnabled = wallpaperManager.isRunning
-        installScreenSaverItem?.title = installedScreenSaverExists()
-            ? "Reinstall Screen Saver"
-            : "Install Screen Saver"
         wallpaperItem?.title = wallpaperEnabled ? "Stop Wallpaper" : "Start Wallpaper"
         wallpaperItem?.state = wallpaperEnabled ? .on : .off
-    }
-
-    @objc private func installScreenSaver() {
-        do {
-            try installBundledScreenSaver()
-            updateMenu()
-            showMessage(
-                title: "Ametrix screen saver installed.",
-                message: "Select Ametrix once in System Settings > Screen Saver, then set Lock Screen to require a password immediately after the screen saver begins."
-            )
-        } catch {
-            showMessage(
-                title: "Ametrix could not install the screen saver.",
-                message: "\(error)"
-            )
-        }
     }
 
     @objc private func toggleWallpaper() {
@@ -446,19 +396,6 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         }
 
         updateMenu()
-    }
-
-    @objc private func lockScreen() {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let status = startSystemScreenSaver()
-            guard status != 0 else {
-                return
-            }
-
-            DispatchQueue.main.async {
-                self.showScreenSaverError()
-            }
-        }
     }
 
     @objc private func openPreferences() {
@@ -480,10 +417,6 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         }
 
         settingsWindowController?.show()
-    }
-
-    @objc private func openSetupGuide() {
-        showOnboarding()
     }
 
     /// Shows the first-run guide. Wires the step buttons to the existing saver
@@ -546,13 +479,6 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     @objc private func quit() {
         wallpaperManager.stop()
         NSApp.terminate(nil)
-    }
-
-    private func showScreenSaverError() {
-        showMessage(
-            title: "Ametrix could not start the lock screen.",
-            message: "Install Ametrix.saver, then select Ametrix once in System Settings > Screen Saver."
-        )
     }
 
     private func showMessage(title: String, message: String) {

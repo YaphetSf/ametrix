@@ -173,7 +173,7 @@ struct OnboardingView: View {
 
     private var footer: some View {
         HStack {
-            Text("You can reopen this from the menu bar → Setup Guide.")
+            Text("You can manage Ametrix anytime from the menu bar.")
                 .font(.caption)
                 .foregroundStyle(.white.opacity(0.45))
             Spacer()
