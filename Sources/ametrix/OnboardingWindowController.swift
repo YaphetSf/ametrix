@@ -173,7 +173,7 @@ struct OnboardingView: View {
 
     private var footer: some View {
         HStack {
-            Text("You can manage Ametrix anytime from the menu bar.")
+            Text("Press Control-Option-Command-L anytime to start Ametrix.")
                 .font(.caption)
                 .foregroundStyle(.white.opacity(0.45))
             Spacer()

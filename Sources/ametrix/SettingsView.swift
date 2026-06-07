@@ -109,6 +109,7 @@ struct SettingsSetupActions {
     let saverInstalled: () -> Bool
     let toggleWallpaper: () -> Void
     let wallpaperRunning: () -> Bool
+    let startScreenSaver: () -> Void
 }
 
 private enum SettingsPage: String, CaseIterable, Identifiable {
@@ -547,16 +548,30 @@ private struct SetupSettings: View {
     @Binding var saverInstalled: Bool
 
     var body: some View {
-        SettingsCard(title: "Screen saver", detail: "Install the bundled saver into your user Library.") {
-            SetupActionRow(
-                symbol: saverInstalled ? "checkmark.circle.fill" : "arrow.down.circle.fill",
-                title: saverInstalled ? "Screen saver installed" : "Screen saver not installed",
-                detail: saverInstalled ? "Reinstall if you update Ametrix." : "Install it before selecting Ametrix in System Settings.",
-                actionTitle: saverInstalled ? "Reinstall" : "Install",
-                prominent: !saverInstalled
-            ) {
-                actions?.reinstallSaver()
-                saverInstalled = actions?.saverInstalled() ?? false
+        VStack(spacing: 14) {
+            SettingsCard(title: "Lock shortcut", detail: "Available globally while Ametrix is running in the menu bar.") {
+                SetupActionRow(
+                    symbol: "lock.fill",
+                    title: "Control + Option + Command + L",
+                    detail: "Starts Ametrix through macOS ScreenSaverEngine, preserving the system lock and authentication flow.",
+                    actionTitle: "Try It",
+                    prominent: true
+                ) {
+                    actions?.startScreenSaver()
+                }
+            }
+
+            SettingsCard(title: "Screen saver", detail: "Install the bundled saver into your user Library.") {
+                SetupActionRow(
+                    symbol: saverInstalled ? "checkmark.circle.fill" : "arrow.down.circle.fill",
+                    title: saverInstalled ? "Screen saver installed" : "Screen saver not installed",
+                    detail: saverInstalled ? "Reinstall if you update Ametrix." : "Install it before selecting Ametrix in System Settings.",
+                    actionTitle: saverInstalled ? "Reinstall" : "Install",
+                    prominent: !saverInstalled
+                ) {
+                    actions?.reinstallSaver()
+                    saverInstalled = actions?.saverInstalled() ?? false
+                }
             }
         }
     }

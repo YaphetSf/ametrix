@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 import Foundation
 
 private enum CommandLineMode {
@@ -20,6 +21,67 @@ private enum QuitEvent {
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         return flags.contains(.command)
             && event.charactersIgnoringModifiers?.lowercased() == "q"
+    }
+}
+
+private final class GlobalHotKey {
+    private var hotKey: EventHotKeyRef?
+    private var handler: EventHandlerRef?
+    private let action: () -> Void
+
+    init?(keyCode: UInt32, modifiers: UInt32, action: @escaping () -> Void) {
+        self.action = action
+
+        var eventType = EventTypeSpec(
+            eventClass: OSType(kEventClassKeyboard),
+            eventKind: UInt32(kEventHotKeyPressed)
+        )
+        let handlerStatus = InstallEventHandler(
+            GetApplicationEventTarget(),
+            { _, _, userData in
+                guard let userData else {
+                    return OSStatus(eventNotHandledErr)
+                }
+
+                let hotKey = Unmanaged<GlobalHotKey>.fromOpaque(userData).takeUnretainedValue()
+                DispatchQueue.main.async {
+                    hotKey.action()
+                }
+                return noErr
+            },
+            1,
+            &eventType,
+            Unmanaged.passUnretained(self).toOpaque(),
+            &handler
+        )
+        guard handlerStatus == noErr else {
+            return nil
+        }
+
+        let hotKeyID = EventHotKeyID(signature: OSType(0x414D5458), id: 1) // "AMTX"
+        let registrationStatus = RegisterEventHotKey(
+            keyCode,
+            modifiers,
+            hotKeyID,
+            GetApplicationEventTarget(),
+            0,
+            &hotKey
+        )
+        guard registrationStatus == noErr else {
+            if let handler {
+                RemoveEventHandler(handler)
+            }
+            return nil
+        }
+    }
+
+    deinit {
+        if let hotKey {
+            UnregisterEventHotKey(hotKey)
+        }
+        if let handler {
+            RemoveEventHandler(handler)
+        }
     }
 }
 
@@ -312,6 +374,7 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private var wallpaperItem: NSMenuItem?
     private var settingsWindowController: SettingsWindowController?
     private var onboardingWindowController: OnboardingWindowController?
+    private var lockHotKey: GlobalHotKey?
 
     init(startWallpaper: Bool) {
         self.startWallpaper = startWallpaper
@@ -320,6 +383,7 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         installStatusItem()
+        installLockHotKey()
 
         if startWallpaper || UserDefaults.standard.bool(forKey: DefaultsKey.wallpaperEnabled) {
             wallpaperManager.start()
@@ -380,6 +444,19 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         self.wallpaperItem = wallpaperItem
     }
 
+    private func installLockHotKey() {
+        lockHotKey = GlobalHotKey(
+            keyCode: UInt32(kVK_ANSI_L),
+            modifiers: UInt32(controlKey | optionKey | cmdKey)
+        ) { [weak self] in
+            self?.startAmetrixScreenSaver()
+        }
+
+        if lockHotKey == nil {
+            writeError("ametrix: could not register global shortcut Control-Option-Command-L.\n")
+        }
+    }
+
     private func updateMenu() {
         let wallpaperEnabled = wallpaperManager.isRunning
         wallpaperItem?.title = wallpaperEnabled ? "Stop Wallpaper" : "Start Wallpaper"
@@ -411,7 +488,8 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
                     reinstallSaver: { [weak self] in _ = self?.installScreenSaverSilently() },
                     saverInstalled: { installedScreenSaverExists() },
                     toggleWallpaper: { [weak self] in self?.toggleWallpaper() },
-                    wallpaperRunning: { [weak self] in self?.wallpaperManager.isRunning ?? false }
+                    wallpaperRunning: { [weak self] in self?.wallpaperManager.isRunning ?? false },
+                    startScreenSaver: { [weak self] in self?.startAmetrixScreenSaver() }
                 )
             )
         }
@@ -456,6 +534,22 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
                 message: "\(error)"
             )
             return false
+        }
+    }
+
+    private func startAmetrixScreenSaver() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let status = startSystemScreenSaver()
+            guard status != 0 else {
+                return
+            }
+
+            DispatchQueue.main.async {
+                self?.showMessage(
+                    title: "Ametrix could not start the screen saver.",
+                    message: "Install Ametrix.saver, then select Ametrix once in System Settings > Screen Saver."
+                )
+            }
         }
     }
 
