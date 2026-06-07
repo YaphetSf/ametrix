@@ -497,17 +497,15 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         settingsWindowController?.show()
     }
 
-    /// Shows the first-run guide. Wires the step buttons to the existing saver
-    /// install + System Settings deep links, and records completion on dismiss.
+    /// Shows the first-run guide and records completion on dismiss.
     private func showOnboarding() {
         if onboardingWindowController == nil {
             onboardingWindowController = OnboardingWindowController(
                 installSaver: { [weak self] in self?.installScreenSaverSilently() ?? false },
                 saverInstalled: { installedScreenSaverExists() },
-                // macOS 26 has no standalone Screen Saver pane; the screen saver
-                // picker lives behind the "Screen Saver…" button in Wallpaper.
                 openScreenSaverSettings: { openSystemSettingsPane("com.apple.Wallpaper-Settings.extension") },
-                openLockScreenSettings: { openSystemSettingsPane("com.apple.Lock-Screen-Settings.extension") },
+                toggleWallpaper: { [weak self] in self?.toggleWallpaper() },
+                wallpaperRunning: { [weak self] in self?.wallpaperManager.isRunning ?? false },
                 onCompleted: { [weak self] in
                     UserDefaults.standard.set(true, forKey: DefaultsKey.onboardingCompleted)
                     self?.onboardingWindowController = nil

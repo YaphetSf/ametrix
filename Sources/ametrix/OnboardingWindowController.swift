@@ -1,9 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// First-run welcome window. Walks the user through installing the screen saver
-/// and pointing macOS at it, so the daily flow no longer depends on the menu bar
-/// item. Reusable later via the "Setup Guide…" menu item.
+/// First-run welcome window. Installs the screen saver and introduces the
+/// wallpaper and global lock shortcut.
 final class OnboardingWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
 
@@ -12,7 +11,8 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
     /// Whether `Ametrix.saver` is already installed (drives the step 1 checkmark).
     private let saverInstalled: () -> Bool
     private let openScreenSaverSettings: () -> Void
-    private let openLockScreenSettings: () -> Void
+    private let toggleWallpaper: () -> Void
+    private let wallpaperRunning: () -> Bool
     /// Called whenever the guide is dismissed (Done or close) — records that it ran.
     private let onCompleted: () -> Void
     /// Called only when the user presses Done — opens the main app window next.
@@ -22,14 +22,16 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
         installSaver: @escaping () -> Bool,
         saverInstalled: @escaping () -> Bool,
         openScreenSaverSettings: @escaping () -> Void,
-        openLockScreenSettings: @escaping () -> Void,
+        toggleWallpaper: @escaping () -> Void,
+        wallpaperRunning: @escaping () -> Bool,
         onCompleted: @escaping () -> Void,
         onProceed: @escaping () -> Void
     ) {
         self.installSaver = installSaver
         self.saverInstalled = saverInstalled
         self.openScreenSaverSettings = openScreenSaverSettings
-        self.openLockScreenSettings = openLockScreenSettings
+        self.toggleWallpaper = toggleWallpaper
+        self.wallpaperRunning = wallpaperRunning
         self.onCompleted = onCompleted
         self.onProceed = onProceed
     }
@@ -45,7 +47,8 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
             saverInstalled: saverInstalled,
             installSaver: installSaver,
             openScreenSaverSettings: openScreenSaverSettings,
-            openLockScreenSettings: openLockScreenSettings,
+            toggleWallpaper: toggleWallpaper,
+            wallpaperRunning: wallpaperRunning,
             finish: { [weak self] in self?.finish() }
         )
 
@@ -59,7 +62,7 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
         window.backgroundColor = .black
         window.isReleasedWhenClosed = false
         window.delegate = self
-        window.setContentSize(NSSize(width: 520, height: 640))
+        window.setContentSize(NSSize(width: 540, height: 580))
         window.center()
 
         self.window = window
@@ -93,10 +96,13 @@ struct OnboardingView: View {
     let saverInstalled: () -> Bool
     let installSaver: () -> Bool
     let openScreenSaverSettings: () -> Void
-    let openLockScreenSettings: () -> Void
+    let toggleWallpaper: () -> Void
+    let wallpaperRunning: () -> Bool
     let finish: () -> Void
 
     @State private var installed = false
+    @State private var screenSaverSettingsOpened = false
+    @State private var wallpaperEnabled = false
 
     private static let accent = Color(red: 0.0, green: 0.95, blue: 0.37)
 
@@ -108,8 +114,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 14) {
                 StepCard(
                     index: 1,
-                    title: "Install the screen saver",
-                    detail: "Copies Ametrix.saver into your Library so macOS can use it.",
+                    title: installed ? "Screen saver installed" : "Install the screen saver",
                     accent: Self.accent,
                     done: installed,
                     actionTitle: installed ? "Installed" : "Install",
@@ -121,24 +126,23 @@ struct OnboardingView: View {
                 StepCard(
                     index: 2,
                     title: "Select Ametrix as your screen saver",
-                    detail: "Opens Wallpaper settings — click “Screen Saver…” there, then pick Ametrix.",
                     accent: Self.accent,
-                    done: false,
-                    actionTitle: "Open Screen Saver…",
+                    done: screenSaverSettingsOpened,
+                    actionTitle: screenSaverSettingsOpened ? "Open Again…" : "Open Screen Saver…",
                     actionDisabled: false,
-                    action: openScreenSaverSettings
+                    action: {
+                        openScreenSaverSettings()
+                        screenSaverSettingsOpened = true
+                    }
                 )
 
-                StepCard(
-                    index: 3,
-                    title: "Require a password on lock",
-                    detail: "In System Settings → Lock Screen, require a password immediately after the screen saver begins.",
+                DailyUseStepCard(
                     accent: Self.accent,
-                    done: false,
-                    actionTitle: "Open Lock Screen…",
-                    actionDisabled: false,
-                    action: openLockScreenSettings
-                )
+                    wallpaperEnabled: wallpaperEnabled
+                ) {
+                    toggleWallpaper()
+                    wallpaperEnabled = wallpaperRunning()
+                }
             }
             .padding(20)
 
@@ -146,9 +150,15 @@ struct OnboardingView: View {
 
             footer
         }
-        .frame(width: 520, height: 640)
+        .frame(width: 540, height: 580)
         .background(background)
-        .onAppear { installed = saverInstalled() }
+        .onAppear {
+            installed = saverInstalled()
+            if !installed {
+                installed = installSaver()
+            }
+            wallpaperEnabled = wallpaperRunning()
+        }
     }
 
     private var header: some View {
@@ -162,9 +172,6 @@ struct OnboardingView: View {
             Text("Welcome to Ametrix")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-            Text("Matrix rain as your screen saver and lock screen.")
-                .font(.callout)
-                .foregroundStyle(.white.opacity(0.6))
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 32)
@@ -173,9 +180,6 @@ struct OnboardingView: View {
 
     private var footer: some View {
         HStack {
-            Text("Press Control-Option-Command-L anytime to start Ametrix.")
-                .font(.caption)
-                .foregroundStyle(.white.opacity(0.45))
             Spacer()
             Button(action: finish) {
                 Text("Done")
@@ -206,7 +210,6 @@ struct OnboardingView: View {
 private struct StepCard: View {
     let index: Int
     let title: String
-    let detail: String
     let accent: Color
     let done: Bool
     let actionTitle: String
@@ -216,18 +219,13 @@ private struct StepCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             badge
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(.white)
-                Text(detail)
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.6))
-                    .fixedSize(horizontal: false, vertical: true)
                 Button(action: action) { Text(actionTitle) }
                     .controlSize(.regular)
                     .disabled(actionDisabled)
-                    .padding(.top, 4)
             }
             Spacer(minLength: 0)
         }
@@ -256,5 +254,73 @@ private struct StepCard: View {
             }
         }
         .frame(width: 32, height: 32)
+    }
+}
+
+/// Final onboarding step: optional wallpaper setup plus the global lock shortcut.
+private struct DailyUseStepCard: View {
+    let accent: Color
+    let wallpaperEnabled: Bool
+    let toggleWallpaper: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            ZStack {
+                Circle().fill(wallpaperEnabled ? accent.opacity(0.18) : Color.white.opacity(0.06))
+                Text("3")
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(wallpaperEnabled ? accent : .white.opacity(0.8))
+            }
+            .frame(width: 32, height: 32)
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Use Ametrix every day")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+
+                HStack {
+                    Text("Live wallpaper")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                    Spacer()
+                    Toggle("", isOn: wallpaperBinding)
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .tint(accent)
+                }
+
+                Divider().overlay(Color.white.opacity(0.1))
+
+                HStack {
+                    Text("Lock shortcut")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                    Spacer()
+                    Text("⌃  ⌥  ⌘  L")
+                        .font(.system(.headline, design: .monospaced, weight: .bold))
+                        .foregroundStyle(accent)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.white.opacity(0.04))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(accent.opacity(wallpaperEnabled ? 0.5 : 0.15), lineWidth: 1)
+                )
+        )
+    }
+
+    private var wallpaperBinding: Binding<Bool> {
+        Binding(
+            get: { wallpaperEnabled },
+            set: { enabled in
+                guard enabled != wallpaperEnabled else { return }
+                toggleWallpaper()
+            }
+        )
     }
 }
