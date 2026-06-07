@@ -8,7 +8,7 @@ DMG_STAGING_DIR="$DIST_DIR/.dmg-staging"
 DMG_PATH="${AMETRIX_DMG_PATH:-$DIST_DIR/Ametrix.dmg}"
 ENTITLEMENTS_PATH="${AMETRIX_ENTITLEMENTS_PATH:-$ROOT_DIR/scripts/release/entitlements.plist}"
 SIGN_IDENTITY="${AMETRIX_SIGN_IDENTITY:-}"
-NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-}"
+NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-ametrix-notary}"
 APPLE_ID="${APPLE_ID:-}"
 APPLE_PASSWORD="${APPLE_PASSWORD:-}"
 APPLE_TEAM_ID="${APPLE_TEAM_ID:-}"
@@ -17,10 +17,22 @@ SKIP_NOTARIZE="${AMETRIX_SKIP_NOTARIZE:-0}"
 WAIT_FOR_NOTARY="${AMETRIX_NOTARY_WAIT:-1}"
 
 if [[ -z "$SIGN_IDENTITY" ]]; then
-  echo "Error: AMETRIX_SIGN_IDENTITY is required."
-  echo "Example:"
-  echo "  AMETRIX_SIGN_IDENTITY='Developer ID Application: Your Name (TEAMID)' scripts/release/sign-notarize-dmg.sh"
-  exit 1
+  SIGN_IDENTITIES=()
+  while IFS= read -r identity; do
+    SIGN_IDENTITIES+=("$identity")
+  done < <(
+    security find-identity -v -p codesigning |
+      sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p'
+  )
+
+  if [[ "${#SIGN_IDENTITIES[@]}" == "1" ]]; then
+    SIGN_IDENTITY="${SIGN_IDENTITIES[0]}"
+    echo "Using signing identity: $SIGN_IDENTITY"
+  else
+    echo "Error: expected exactly one Developer ID Application identity, found ${#SIGN_IDENTITIES[@]}."
+    echo "Set AMETRIX_SIGN_IDENTITY to choose one explicitly."
+    exit 1
+  fi
 fi
 
 if [[ ! -f "$ENTITLEMENTS_PATH" ]]; then
@@ -92,16 +104,7 @@ if [[ "$SKIP_NOTARIZE" == "1" ]]; then
 fi
 
 echo "Submitting DMG for notarization..."
-if [[ -n "$NOTARY_PROFILE" ]]; then
-  if [[ "$WAIT_FOR_NOTARY" == "1" ]]; then
-    xcrun notarytool submit "$DMG_PATH" \
-      --keychain-profile "$NOTARY_PROFILE" \
-      --wait
-  else
-    xcrun notarytool submit "$DMG_PATH" \
-      --keychain-profile "$NOTARY_PROFILE"
-  fi
-elif [[ -n "$APPLE_ID" && -n "$APPLE_PASSWORD" && -n "$APPLE_TEAM_ID" ]]; then
+if [[ -n "$APPLE_ID" && -n "$APPLE_PASSWORD" && -n "$APPLE_TEAM_ID" ]]; then
   if [[ "$WAIT_FOR_NOTARY" == "1" ]]; then
     xcrun notarytool submit "$DMG_PATH" \
       --apple-id "$APPLE_ID" \
@@ -113,6 +116,15 @@ elif [[ -n "$APPLE_ID" && -n "$APPLE_PASSWORD" && -n "$APPLE_TEAM_ID" ]]; then
       --apple-id "$APPLE_ID" \
       --password "$APPLE_PASSWORD" \
       --team-id "$APPLE_TEAM_ID"
+  fi
+elif [[ -n "$NOTARY_PROFILE" ]]; then
+  if [[ "$WAIT_FOR_NOTARY" == "1" ]]; then
+    xcrun notarytool submit "$DMG_PATH" \
+      --keychain-profile "$NOTARY_PROFILE" \
+      --wait
+  else
+    xcrun notarytool submit "$DMG_PATH" \
+      --keychain-profile "$NOTARY_PROFILE"
   fi
 else
   echo "Error: notarization credentials are missing."
@@ -131,6 +143,6 @@ echo "Stapling notarization ticket..."
 xcrun stapler staple "$DMG_PATH"
 
 echo "Assessing notarized DMG..."
-spctl --assess --type open --verbose=2 "$DMG_PATH"
+spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG_PATH"
 
 echo "Created notarized DMG: $DMG_PATH"

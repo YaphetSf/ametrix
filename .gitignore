@@ -11,3 +11,10 @@ DerivedData/
 
 # Local helper scripts and runtime diagnostics
 *.log
+
+# Signing and notarization credentials
+*.p8
+*.p12
+*.mobileprovision
+.env
+.env.*

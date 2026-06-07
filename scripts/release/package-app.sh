@@ -25,8 +25,7 @@ swift build --disable-sandbox -c release
 
 rm -rf "$SAVER_STAGING_DIR"
 AMETRIX_SAVER_DEST_DIR="$SAVER_STAGING_DIR" \
-  AMETRIX_OPEN_SETTINGS=0 \
-  "$ROOT_DIR/scripts/install/screensaver.sh"
+  "$ROOT_DIR/scripts/release/build-screensaver.sh"
 
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"

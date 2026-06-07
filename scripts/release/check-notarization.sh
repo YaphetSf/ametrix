@@ -35,7 +35,7 @@ case "$STATUS" in
   Accepted)
     echo "Stapling notarization ticket to $DMG_PATH..."
     xcrun stapler staple "$DMG_PATH"
-    spctl --assess --type open --verbose=2 "$DMG_PATH"
+    spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG_PATH"
     echo "Notarized DMG is ready: $DMG_PATH"
     ;;
   "In Progress")

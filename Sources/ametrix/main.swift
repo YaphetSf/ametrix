@@ -696,8 +696,8 @@ private func printUsage() {
           ametrix --print-config Print the resolved config source
           ametrix --help         Show this help
 
-        Install Ametrix.saver with scripts/install/screensaver.sh, then select Ametrix
-        once in System Settings > Screen Saver. macOS handles unlock/password.
+        Launch Ametrix.app once to install Ametrix.saver, then select Ametrix in
+        System Settings > Screen Saver. macOS handles unlock/password.
         """
     )
 }
@@ -890,7 +890,7 @@ private func startSystemScreenSaver() -> Int32 {
         writeError(
             """
             ametrix: Ametrix.saver is not installed.
-            Run scripts/install/screensaver.sh, then select Ametrix in System Settings > Screen Saver.
+            Launch Ametrix.app once, then select Ametrix in System Settings > Screen Saver.
             """
         )
         return 1
