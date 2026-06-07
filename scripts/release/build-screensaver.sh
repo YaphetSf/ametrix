@@ -13,11 +13,15 @@ elif [[ -n "${DEVELOPER_DIR:-}" ]]; then
     export DEVELOPER_DIR
 fi
 
+rm -rf "$DERIVED_DATA"
+
 xcodebuild \
     -project "$ROOT_DIR/ametrix.xcodeproj" \
     -scheme AmetrixScreenSaver \
     -configuration Release \
     -derivedDataPath "$DERIVED_DATA" \
+    ARCHS="arm64 x86_64" \
+    ONLY_ACTIVE_ARCH=NO \
     CODE_SIGNING_ALLOWED=NO \
     build
 

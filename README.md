@@ -4,7 +4,7 @@
   <img src="assets/ametrix-icon-256.png" alt="Ametrix" width="160">
 </p>
 
-A native macOS Matrix-style digital rain screen saver and lock-screen trigger.
+A native macOS Matrix-style digital rain screen saver and live wallpaper.
 
 Ametrix installs as a real macOS `.saver` bundle and includes a live desktop
 wallpaper. The renderer is native AppKit/CoreText code: no terminal emulator,
@@ -16,13 +16,10 @@ Watch unlock, and screen-saver password policy.
 ## Features
 
 - Native macOS screen saver bundle
-- Built-in global `Control-Command-Z` lock shortcut
-- Menu bar controller for wallpaper and preferences
+- `Control-Command-Z` lock shortcut to override the macOS native version
 - Optional live wallpaper mode
-- Manual full-screen overlay mode
 - Multi-display support
 - Configurable color presets, density, speed, trails, font, and glyph palette
-- Latin, katakana, number, and symbol glyphs by default
 - No network access or telemetry
 
 ## Requirements
@@ -32,98 +29,26 @@ Watch unlock, and screen-saver password policy.
 
 ## Quick Start
 
+### Option 1
 Download `Ametrix.dmg` from the latest GitHub release, open it, and drag
-`Ametrix.app` to Applications.
+`Ametrix.app` into Applications.
 
-Launch Ametrix once from Applications. Onboarding installs the bundled screen
-saver and guides you through selecting it. The menu bar icon lets you:
-
-- Start or stop the live wallpaper
-- Open **Preferences…** to tune colors, density, motion, and glyphs with a
-  live preview — changes save to the TOML config and refresh a running wallpaper
-  immediately
-- Quit Ametrix
-
-After onboarding:
-
-1. Select **Ametrix** once in **System Settings -> Screen Saver**.
-2. In **System Settings -> Lock Screen**, set password requirement to
-   immediately after the screen saver begins.
-
-Press `Control-Command-Z` while Ametrix is running to start the screen saver and
-enter the normal macOS lock flow.
-
-To build a local drag-and-drop app bundle:
+### Option 2
+Clone this repository and build the Universal 2 app from source:
 
 ```bash
 scripts/release/package-app.sh
 ```
 
-This creates `dist/Ametrix.app`. The app runs as a menu bar controller and includes
-`Ametrix.saver` plus the default config template in its bundle resources.
-
-## Usage
-
-Start the selected macOS screen saver:
+This creates `dist/Ametrix.app`. Launch it directly:
 
 ```bash
-ametrix
+open dist/Ametrix.app
 ```
 
-Run Ametrix directly as an overlay:
-
-```bash
-ametrix --overlay
-```
-
-Run Ametrix as a desktop-level live wallpaper:
-
-```bash
-ametrix --wallpaper
-```
-
-Run Ametrix as a menu bar controller:
-
-```bash
-ametrix --menubar
-```
-
-Start menu bar mode with wallpaper already enabled:
-
-```bash
-ametrix --menubar --wallpaper
-```
-
-Open the preferences window on its own (also available as the menu bar
-**Preferences…** item):
-
-```bash
-ametrix --preferences
-```
-
-Inspect the resolved config:
-
-```bash
-ametrix --print-config
-```
-
-Screen saver mode is controlled by macOS. Wake, unlock, password, Touch ID, and Apple Watch unlock behavior are handled by the system.
-
-Overlay mode opens one borderless window per display. Press `Esc` or `Cmd-Q` to quit.
-
-Wallpaper mode runs behind normal desktop windows, joins all Spaces, and ignores
-mouse events. It is a normal app window, not a native item in macOS Wallpaper
-settings.
-
-Menu bar mode adds an Ametrix icon to the macOS menu bar. Wallpaper state is
-remembered across launches.
-
-## Lock Shortcut
-
-Ametrix does not draw over the macOS lock screen. The built-in global
-`Control-Command-Z` shortcut starts Ametrix through macOS ScreenSaverEngine.
-With macOS configured to require a password immediately after the screen saver
-starts, authentication remains fully owned by the system.
+The onboarding guide installs the screen saver and opens the relevant System
+Settings page. After setup, use the menu bar icon to control the wallpaper, open
+preferences, or quit Ametrix.
 
 ## Configuration
 
@@ -214,12 +139,6 @@ scripts/dev/retest.sh --keep      # keep installed saver + config, only reset pr
 scripts/dev/retest.sh --no-build  # skip repackaging, reuse dist/Ametrix.app
 ```
 
-Build the CLI:
-
-```bash
-swift build -c release
-```
-
 Build a local `.app` bundle:
 
 ```bash
@@ -269,7 +188,7 @@ Useful environment variables:
 
 ```text
 Sources/ametrix/main.swift
-  CLI entry point, overlay app lifecycle, menu bar controller, screen saver launch
+  App lifecycle, menu bar controller, wallpaper, and screen saver launch
 
 Sources/ametrix/AmetrixConfiguration.swift
   TOML/JSON config loading, presets, screen saver container paths

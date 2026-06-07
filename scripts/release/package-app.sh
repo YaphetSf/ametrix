@@ -9,6 +9,9 @@ CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 SAVER_STAGING_DIR="$DIST_DIR/.saver-staging"
+UNIVERSAL_BUILD_DIR="$ROOT_DIR/.build/universal"
+ARM64_BUILD_DIR="$ROOT_DIR/.build/swift-arm64"
+X86_64_BUILD_DIR="$ROOT_DIR/.build/swift-x86_64"
 VERSION="${AMETRIX_VERSION:-0.1.0}"
 BUILD_NUMBER="${AMETRIX_BUILD_NUMBER:-1}"
 BUNDLE_ID="${AMETRIX_BUNDLE_ID:-com.dingz.uk.ametrix.app}"
@@ -21,7 +24,23 @@ fi
 
 cd "$ROOT_DIR"
 
-swift build --disable-sandbox -c release
+swift build \
+  --disable-sandbox \
+  --configuration release \
+  --scratch-path "$ARM64_BUILD_DIR" \
+  --triple arm64-apple-macosx13.0
+
+swift build \
+  --disable-sandbox \
+  --configuration release \
+  --scratch-path "$X86_64_BUILD_DIR" \
+  --triple x86_64-apple-macosx13.0
+
+mkdir -p "$UNIVERSAL_BUILD_DIR"
+lipo -create \
+  "$ARM64_BUILD_DIR/arm64-apple-macosx/release/ametrix" \
+  "$X86_64_BUILD_DIR/x86_64-apple-macosx/release/ametrix" \
+  -output "$UNIVERSAL_BUILD_DIR/ametrix"
 
 rm -rf "$SAVER_STAGING_DIR"
 AMETRIX_SAVER_DEST_DIR="$SAVER_STAGING_DIR" \
@@ -30,7 +49,7 @@ AMETRIX_SAVER_DEST_DIR="$SAVER_STAGING_DIR" \
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 
-ditto "$ROOT_DIR/.build/release/ametrix" "$MACOS_DIR/Ametrix"
+ditto "$UNIVERSAL_BUILD_DIR/ametrix" "$MACOS_DIR/Ametrix"
 chmod 755 "$MACOS_DIR/Ametrix"
 
 ditto "$SAVER_STAGING_DIR/Ametrix.saver" "$RESOURCES_DIR/Ametrix.saver"
@@ -78,5 +97,16 @@ cat > "$CONTENTS_DIR/PkgInfo" <<PKGINFO
 APPL????
 PKGINFO
 
+for binary in \
+  "$MACOS_DIR/Ametrix" \
+  "$RESOURCES_DIR/Ametrix.saver/Contents/MacOS/Ametrix"; do
+  architectures="$(lipo -archs "$binary")"
+  if [[ "$architectures" != *"arm64"* || "$architectures" != *"x86_64"* ]]; then
+    echo "Error: expected Universal 2 binary, found '$architectures': $binary"
+    exit 1
+  fi
+done
+
 echo "Packaged $APP_DIR"
+echo "Architectures: arm64 x86_64"
 echo "Run it with: open \"$APP_DIR\""
