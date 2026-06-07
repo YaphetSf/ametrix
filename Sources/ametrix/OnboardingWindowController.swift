@@ -67,8 +67,11 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
     }
 
     private func finish() {
-        onProceed()
+        let proceed = onProceed
         window?.close()
+        DispatchQueue.main.async {
+            proceed()
+        }
     }
 
     private func bringToFront(_ window: NSWindow) {
