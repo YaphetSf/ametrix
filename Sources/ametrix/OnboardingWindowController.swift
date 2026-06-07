@@ -296,7 +296,7 @@ private struct DailyUseStepCard: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                     Spacer()
-                    Text("⌃  ⌥  ⌘  L")
+                    Text(AmetrixShortcuts.lock.symbolicLabel)
                         .font(.system(.headline, design: .monospaced, weight: .bold))
                         .foregroundStyle(accent)
                 }

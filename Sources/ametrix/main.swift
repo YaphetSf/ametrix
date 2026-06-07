@@ -445,15 +445,16 @@ private final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func installLockHotKey() {
+        let shortcut = AmetrixShortcuts.lock
         lockHotKey = GlobalHotKey(
-            keyCode: UInt32(kVK_ANSI_L),
-            modifiers: UInt32(controlKey | optionKey | cmdKey)
+            keyCode: shortcut.keyCode,
+            modifiers: shortcut.modifiers
         ) { [weak self] in
             self?.startAmetrixScreenSaver()
         }
 
         if lockHotKey == nil {
-            writeError("ametrix: could not register global shortcut Control-Option-Command-L.\n")
+            writeError("ametrix: could not register global shortcut \(shortcut.logLabel).\n")
         }
     }
 

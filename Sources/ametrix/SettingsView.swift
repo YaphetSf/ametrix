@@ -552,7 +552,7 @@ private struct SetupSettings: View {
             SettingsCard(title: "Lock shortcut", detail: "Available globally while Ametrix is running in the menu bar.") {
                 SetupActionRow(
                     symbol: "lock.fill",
-                    title: "Control + Option + Command + L",
+                    title: AmetrixShortcuts.lock.displayLabel,
                     detail: "Starts Ametrix through macOS ScreenSaverEngine, preserving the system lock and authentication flow.",
                     actionTitle: "Try It",
                     prominent: true
