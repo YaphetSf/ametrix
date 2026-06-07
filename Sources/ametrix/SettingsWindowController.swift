@@ -48,10 +48,12 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         )
 
         let window = NSWindow(contentViewController: NSHostingController(rootView: rootView))
-        window.title = "Ametrix Preferences"
-        window.styleMask = [.titled, .closable, .miniaturizable]
+        window.title = "Ametrix Studio"
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.isReleasedWhenClosed = false
         window.delegate = self
+        window.setContentSize(NSSize(width: 980, height: 760))
+        window.contentMinSize = NSSize(width: 820, height: 640)
         window.center()
 
         self.window = window
