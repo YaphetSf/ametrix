@@ -25,7 +25,7 @@ Watch unlock, and screen-saver password policy.
 ## Requirements
 
 - macOS 13 or newer
-- Swift 5.9 or newer and Xcode when building from source
+- Xcode and `xcodegen` (`brew install xcodegen`) when building from source
 
 ## Quick Start
 
@@ -37,7 +37,7 @@ Download `Ametrix.dmg` from the latest GitHub release, open it, and drag
 Clone this repository and build the Universal 2 app from source:
 
 ```bash
-scripts/release/package-app.sh
+scripts/rebuild-dev
 ```
 
 This creates `dist/Ametrix.app`. Launch it directly:
@@ -121,38 +121,37 @@ config into the container before starting the screen saver.
 
 ## Development
 
-Script layout:
+Both the host app and the screen saver bundle are built from a single
+`project.yml` (generated into `ametrix.xcodeproj` by `xcodegen`). The
+screen saver target explicitly lists the shared source files it needs from
+`Sources/ametrix/`, so renaming or deleting one of them breaks the build
+instead of silently producing a stale bundle.
+
+Two scripts cover everything:
 
 ```text
 scripts/
-  branding/                 Reproducible app icon renderer
-  dev/                      Local development and testing helpers
-  release/                  Screen saver build, app packaging, signing, notarization
+  rebuild-dev     Local ad-hoc Debug build, staged to dist/, launched
+  release.sh      Signed + notarized Universal 2 DMG into dist/
+  branding/       Reproducible app icon renderer
+  entitlements.plist   Empty entitlements applied to both bundles
 ```
 
-Clean-slate test as a first-time user (resets prefs, installed saver, and config,
-then repackages and relaunches so the onboarding guide appears):
+Local dev loop (Debug, ad-hoc, fast iteration):
 
 ```bash
-scripts/dev/retest.sh             # full reset, repackage, launch
-scripts/dev/retest.sh --keep      # keep installed saver + config, only reset prefs
-scripts/dev/retest.sh --no-build  # skip repackaging, reuse dist/Ametrix.app
+scripts/rebuild-dev                # Debug
+scripts/rebuild-dev Release        # Release if you want a non-debug run
 ```
 
-Build a local `.app` bundle:
+Release build (signs, notarizes, staples; ~minutes for the Apple queue):
 
 ```bash
-scripts/release/package-app.sh
+AMETRIX_NOTARY_PROFILE=ametrix-notary scripts/release.sh
+# -> dist/Ametrix-<version>-universal.dmg
 ```
 
-Build, sign, notarize, and package a release DMG:
-
-```bash
-scripts/release/sign-notarize-dmg.sh
-```
-
-The script automatically uses the only installed Developer ID Application
-certificate and the `ametrix-notary` Keychain profile. Create that profile once:
+Create the notary profile once:
 
 ```bash
 xcrun notarytool store-credentials ametrix-notary
@@ -164,25 +163,9 @@ The resulting profile is stored in the macOS Keychain, not in this repository.
 For a signed-only local DMG without notarization:
 
 ```bash
-AMETRIX_SKIP_NOTARIZE=1 \
-scripts/release/sign-notarize-dmg.sh
+AMETRIX_SKIP_NOTARIZE=1 scripts/release.sh
+# -> dist/Ametrix-<version>-preview.dmg (ad-hoc, not for distribution)
 ```
-
-Build only the screen saver bundle:
-
-```bash
-scripts/release/build-screensaver.sh
-```
-
-Useful environment variables:
-
-| Variable | Purpose |
-|---|---|
-| `AMETRIX_SAVER_DEST_DIR` | Override `.saver` build output directory |
-| `AMETRIX_SIGN_IDENTITY` | Override the auto-detected Developer ID Application identity |
-| `AMETRIX_NOTARY_PROFILE` | Override the default `ametrix-notary` Keychain profile |
-| `AMETRIX_SKIP_NOTARIZE=1` | Build a signed local DMG without Apple notarization |
-| `DEVELOPER_DIR` | Select a specific Xcode toolchain; otherwise `/Applications/Xcode.app` is used when present |
 
 ## Architecture
 

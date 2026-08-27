@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Local dev rebuild: Debug, ad-hoc, staged to dist/Ametrix.app, launched.
+# Override config with the first arg: rebuild-dev Release
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+CONFIG="${1:-Debug}"
+
+command -v xcodegen >/dev/null 2>&1 || { echo "xcodegen missing: brew install xcodegen" >&2; exit 1; }
+
+echo "==> xcodegen"
+xcodegen generate --quiet
+
+echo "==> xcodebuild ($CONFIG, ad-hoc)"
+xcodebuild -project ametrix.xcodeproj -scheme ametrix -configuration "$CONFIG" \
+  -destination 'generic/platform=macOS' \
+  -derivedDataPath .build/DerivedData \
+  CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual \
+  OTHER_CODE_SIGN_FLAGS="--timestamp=none" \
+  -quiet build 2>&1 | { grep -v DVTDeviceOperation || true; }
+
+APP=".build/DerivedData/Build/Products/$CONFIG/Ametrix.app"
+[ -d "$APP" ] || { echo "build failed: $APP missing" >&2; exit 1; }
+
+mkdir -p dist
+rm -rf dist/Ametrix.app
+cp -R "$APP" dist/
+
+pkill -x Ametrix 2>/dev/null || true
+sleep 1
+open dist/Ametrix.app
+
+echo "dist/Ametrix.app ($CONFIG, ad-hoc)"

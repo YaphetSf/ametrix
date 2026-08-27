@@ -1,0 +1,84 @@
+name: ametrix
+
+options:
+  bundleIdPrefix: com.dingz.uk.ametrix
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "13.0"
+  minimumXcodeGenVersion: "2.42.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "2"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    DEAD_CODE_STRIPPING: YES
+    ALWAYS_SEARCH_USER_PATHS: NO
+    CLANG_ENABLE_OBJC_ARC: YES
+    ENABLE_HARDENED_RUNTIME: NO
+    CODE_SIGN_ENTITLEMENTS: scripts/entitlements.plist
+
+targets:
+  ametrix:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/ametrix
+      - path: assets
+      - path: config
+    dependencies:
+      - target: AmetrixScreenSaver
+        copy:
+          destination: resources
+    settings:
+      base:
+        PRODUCT_NAME: Ametrix
+        PRODUCT_BUNDLE_IDENTIFIER: com.dingz.uk.ametrix.app
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSUIElement: true
+        INFOPLIST_KEY_CFBundleIconFile: AppIcon
+        INFOPLIST_KEY_NSHighResolutionCapable: true
+        INFOPLIST_KEY_NSSupportsAutomaticGraphicsSwitching: true
+        INFOPLIST_KEY_LSMinimumSystemVersion: "13.0"
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "2"
+
+  AmetrixScreenSaver:
+    type: bundle
+    platform: macOS
+    sources:
+      - path: Sources/AmetrixScreenSaver/AmetrixScreenSaverView.swift
+      # Shared with the host app. Declared as explicit source paths instead of a
+      # filesystem-path reference so the build breaks (not silently renders nothing)
+      # if a shared file is moved or renamed.
+      - path: Sources/ametrix/MatrixRainView.swift
+      - path: Sources/ametrix/AmetrixConfiguration.swift
+    dependencies:
+      - sdk: ScreenSaver.framework
+    settings:
+      base:
+        PRODUCT_NAME: Ametrix
+        PRODUCT_MODULE_NAME: AmetrixScreenSaver
+        PRODUCT_BUNDLE_IDENTIFIER: com.dingz.uk.ametrix.screensaver
+        WRAPPER_EXTENSION: saver
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundlePackageType: BNDL
+        INFOPLIST_KEY_NSPrincipalClass: AmetrixScreenSaverView
+        INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2026 Ametrix contributors"
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "2"
+
+schemes:
+  ametrix:
+    build:
+      targets:
+        ametrix: [run, profile, analyze, archive]
+        AmetrixScreenSaver: [build]
+    run:
+      config: Debug
+    profile:
+      config: Release
+    archive:
+      config: Release
