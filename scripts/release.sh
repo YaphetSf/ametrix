@@ -16,7 +16,8 @@ OUT="dist"
 VERSION="$(awk -F'"' '/MARKETING_VERSION:/ {print $2; exit}' project.yml)"
 [ -n "$VERSION" ] || { echo "could not read MARKETING_VERSION from project.yml" >&2; exit 1; }
 
-NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-}"
+NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-notary}"
+NOTARY_KEYCHAIN="${AMETRIX_NOTARY_KEYCHAIN:-$HOME/Library/Keychains/signing.keychain-db}"
 SKIP_NOTARIZE="${AMETRIX_SKIP_NOTARIZE:-0}"
 
 command -v xcodegen >/dev/null 2>&1 || { echo "xcodegen missing" >&2; exit 1; }
@@ -25,8 +26,8 @@ if [ "$SKIP_NOTARIZE" = "1" ]; then
   IDENTITY=-
   DMG_PATH="$OUT/Ametrix-$VERSION-preview.dmg"
 else
-  [ -n "$NOTARY_PROFILE" ] || { echo "AMETRIX_NOTARY_PROFILE required for notarization" >&2; exit 1; }
-  xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1 \
+  xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" \
+    --keychain "$NOTARY_KEYCHAIN" >/dev/null 2>&1 \
     || { echo "invalid notary profile: $NOTARY_PROFILE" >&2; exit 1; }
   IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
     | awk -F'"' '/Developer ID Application/ {print $2; exit}')"
@@ -94,7 +95,8 @@ echo "==> sign DMG"
 codesign --force --timestamp --sign "$IDENTITY" "$DMG_PATH"
 
 echo "==> notarize"
-xcrun notarytool submit "$DMG_PATH" --keychain-profile "$NOTARY_PROFILE" --wait
+xcrun notarytool submit "$DMG_PATH" \
+  --keychain-profile "$NOTARY_PROFILE" --keychain "$NOTARY_KEYCHAIN" --wait
 xcrun stapler staple "$DMG_PATH"
 xcrun stapler validate "$DMG_PATH"
 spctl -a -vv -t open --context context:primary-signature "$DMG_PATH"

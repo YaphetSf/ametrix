@@ -147,18 +147,14 @@ scripts/rebuild-dev Release        # Release if you want a non-debug run
 Release build (signs, notarizes, staples; ~minutes for the Apple queue):
 
 ```bash
-AMETRIX_NOTARY_PROFILE=ametrix-notary scripts/release.sh
+scripts/release.sh
 # -> dist/Ametrix-<version>-universal.dmg
 ```
 
-Create the notary profile once:
-
-```bash
-xcrun notarytool store-credentials ametrix-notary
-```
-
-Follow the prompts to use an App Store Connect API key or Apple ID credentials.
-The resulting profile is stored in the macOS Keychain, not in this repository.
+Notarization uses the notarytool profile `notary` (override with
+`AMETRIX_NOTARY_PROFILE`) in the signing keychain
+`~/Library/Keychains/signing.keychain-db`, created by
+`~/Projects/dotfiles/keys/signing-keychain.sh`.
 
 For a signed-only local DMG without notarization:
 
