@@ -18,6 +18,7 @@ VERSION="$(awk -F'"' '/MARKETING_VERSION:/ {print $2; exit}' project.yml)"
 
 NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-notary}"
 NOTARY_KEYCHAIN="${AMETRIX_NOTARY_KEYCHAIN:-$HOME/Library/Keychains/signing.keychain-db}"
+[[ -f $NOTARY_KEYCHAIN ]] && security unlock-keychain -p "" "$NOTARY_KEYCHAIN"
 SKIP_NOTARIZE="${AMETRIX_SKIP_NOTARIZE:-0}"
 
 command -v xcodegen >/dev/null 2>&1 || { echo "xcodegen missing" >&2; exit 1; }
