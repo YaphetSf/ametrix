@@ -17,7 +17,7 @@ VERSION="$(awk -F'"' '/MARKETING_VERSION:/ {print $2; exit}' project.yml)"
 [ -n "$VERSION" ] || { echo "could not read MARKETING_VERSION from project.yml" >&2; exit 1; }
 
 NOTARY_PROFILE="${AMETRIX_NOTARY_PROFILE:-notary}"
-NOTARY_KEYCHAIN="${AMETRIX_NOTARY_KEYCHAIN:-$HOME/Library/Keychains/signing.keychain-db}"
+NOTARY_KEYCHAIN="${AMETRIX_NOTARY_KEYCHAIN:-$HOME/.keys/signing.keychain-db}"
 [[ -f $NOTARY_KEYCHAIN ]] && security unlock-keychain -p "" "$NOTARY_KEYCHAIN"
 SKIP_NOTARIZE="${AMETRIX_SKIP_NOTARIZE:-0}"
 

@@ -153,7 +153,7 @@ scripts/release.sh
 
 Notarization uses the notarytool profile `notary` (override with
 `AMETRIX_NOTARY_PROFILE`) in the signing keychain
-`~/Library/Keychains/signing.keychain-db`, created by
+`~/.keys/signing.keychain-db`, created by
 `~/Projects/dotfiles/keys/signing-keychain.sh`.
 
 For a signed-only local DMG without notarization:
